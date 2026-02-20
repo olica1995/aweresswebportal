@@ -3,26 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Awere SS | Titanium Nexus</title>
+    <title>Awere SS | Unified Nexus</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
 </head>
-<body class="bg-slate-900 text-white font-sans overflow-hidden">
+<body class="bg-slate-950 text-white">
 
-    <div id="login-view" class="flex items-center justify-center min-h-screen p-4 bg-[radial-gradient(circle_at_top_left,_var(--tw-gradient-stops))] from-slate-800 via-slate-900 to-black">
-        <div class="bg-white p-10 rounded-[3rem] shadow-2xl w-full max-w-sm border-b-[12px] border-blue-600 transition-all">
-            <h1 class="text-3xl font-black text-slate-900 text-center mb-1 uppercase italic">Awere ERP</h1>
-            <p class="text-slate-400 text-[10px] font-black text-center mb-8 uppercase tracking-[0.3em]">Titanium Nexus v2.6</p>
+    <div id="login-view" class="flex items-center justify-center min-h-screen p-4 bg-gradient-to-br from-slate-900 to-black">
+        <div class="bg-white p-10 rounded-[2.5rem] shadow-2xl w-full max-w-sm border-b-[12px] border-blue-600">
+            <h1 class="text-3xl font-black text-slate-900 text-center mb-1 italic">AWERE ERP</h1>
+            <p class="text-slate-400 text-[10px] font-black text-center mb-8 uppercase tracking-[0.3em]">Titanium Brain v2.6</p>
             <input type="text" id="u-id" placeholder="User ID / LIN" class="w-full p-4 bg-slate-100 text-slate-900 rounded-2xl mb-3 outline-none border-none focus:ring-4 focus:ring-blue-600/20">
             <input type="password" id="u-pw" placeholder="Security PIN" class="w-full p-4 bg-slate-100 text-slate-900 rounded-2xl mb-8 outline-none border-none focus:ring-4 focus:ring-blue-600/20">
             <button onclick="handleLogin()" class="w-full bg-blue-600 text-white py-5 rounded-2xl font-black shadow-lg hover:bg-blue-700 active:scale-95 transition-all">UNFOLD PORTAL</button>
         </div>
     </div>
 
-    <div id="portal-view" class="hidden flex h-screen text-slate-900">
+    <div id="portal-view" class="hidden flex h-screen text-slate-900 bg-slate-50">
         <aside class="w-72 bg-slate-950 text-slate-400 p-8 flex flex-col shadow-2xl">
-            <div class="mb-12">
+            <div class="mb-10">
                 <h2 class="text-white font-black text-2xl italic tracking-tighter">TITANIUM</h2>
                 <div id="role-tag" class="mt-2 inline-block px-2 py-1 bg-blue-600/20 text-blue-400 text-[10px] font-black rounded border border-blue-600/30 uppercase">Status</div>
             </div>
@@ -33,15 +37,15 @@
             </div>
         </aside>
 
-        <main class="flex-1 overflow-y-auto p-12 bg-slate-50">
-            <h2 id="portal-title" class="text-5xl font-black text-slate-900 mb-10 tracking-tight italic capitalize">Dashboard</h2>
-            <div id="portal-content" class="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-200 min-h-[500px]">
+        <main class="flex-1 overflow-y-auto p-12">
+            <h2 id="portal-title" class="text-5xl font-black text-slate-900 mb-10 tracking-tight italic">Dashboard</h2>
+            <div id="portal-content" class="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-200 min-h-[550px]">
                 </div>
         </main>
     </div>
 
     <script>
-        // --- YOUR FIREBASE CONFIG ---
+        // --- CONFIGURATION ---
         const firebaseConfig = {
             apiKey: "AIzaSyDUoYRjlHxBg3-ddFtsk2tGXAn9X46moHc",
             authDomain: "awere-erp.firebaseapp.com",
@@ -55,21 +59,21 @@
         const db = firebase.firestore();
         let me = null;
 
-        // --- AUTHENTICATION ENGINE ---
+        // --- AUTHENTICATION ---
         async function handleLogin() {
-            const id = document.getElementById('u-id').value.toLowerCase();
-            const pw = document.getElementById('u-pw').value;
+            const id = document.getElementById('u-id').value.trim().toLowerCase();
+            const pw = document.getElementById('u-pw').value.trim();
             
             try {
                 const doc = await db.collection("users").doc(id).get();
-                if (doc.exists && doc.data().password === pw) {
+                if (doc.exists && doc.data().password == pw) {
                     me = { id, ...doc.data() };
                     launchPortal();
-                } else { 
-                    alert("❌ Unauthorized Identity: Access Denied."); 
+                } else {
+                    alert("❌ Unauthorized: Identity not recognized.");
                 }
-            } catch (e) { 
-                alert("📡 Connection Failure. Check Database Rules."); 
+            } catch (e) {
+                alert("📡 Connection Error: Check Firestore Rules.");
             }
         }
 
@@ -86,35 +90,51 @@
         function buildNav() {
             const nav = document.getElementById('sidebar-nav');
             const r = me.role;
-            let h = `<button onclick="showDashboard()" class="w-full text-left p-4 rounded-2xl hover:bg-slate-900 hover:text-white transition font-bold">🏠 Home</button>`;
+            let h = `<button onclick="showDashboard()" class="w-full text-left p-4 rounded-2xl hover:bg-slate-900 hover:text-white transition">🏠 Dashboard</button>`;
             
             if (['dev', 'admin', 'deputy'].includes(r)) {
-                h += `<button onclick="uiManager()" class="w-full text-left p-4 rounded-2xl hover:bg-slate-900 hover:text-white transition font-bold">🛡️ Personnel</button>`;
+                h += `<button onclick="uiPersonnel()" class="w-full text-left p-4 rounded-2xl hover:bg-slate-900 hover:text-white transition">🛡️ Personnel</button>`;
             }
-            if (['dev', 'admin', 'teacher'].includes(r)) {
-                h += `<button onclick="uiAcademics()" class="w-full text-left p-4 rounded-2xl hover:bg-slate-900 hover:text-white transition font-bold text-blue-600">📝 Mark Entry</button>`;
+            if (['dev', 'admin', 'teacher', 'dos'].includes(r)) {
+                h += `<button onclick="uiAcademics()" class="w-full text-left p-4 rounded-2xl hover:bg-slate-900 hover:text-white transition text-blue-500 font-black italic">📝 NCDC Marks</button>`;
             }
-            h += `<button onclick="uiReports()" class="w-full text-left p-4 rounded-2xl hover:bg-slate-900 hover:text-white transition font-bold">📄 Reports</button>`;
+            if (['dev', 'admin', 'bursar'].includes(r)) {
+                h += `<button onclick="uiFinance()" class="w-full text-left p-4 rounded-2xl hover:bg-slate-900 hover:text-white transition">💰 Fees Hub</button>`;
+            }
+            h += `<button onclick="uiStudentPortal()" class="w-full text-left p-4 rounded-2xl hover:bg-slate-900 hover:text-white transition font-bold">🎓 My Records</button>`;
             
             nav.innerHTML = h;
         }
 
-        // --- PANEL: MASTER CONTROL ---
-        function uiManager() {
-            document.getElementById('portal-title').innerText = "Personnel Management";
+        // --- MODULES ---
+
+        function showDashboard() {
+            document.getElementById('portal-title').innerText = "System Dashboard";
+            document.getElementById('portal-content').innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="bg-blue-600 p-10 rounded-[3rem] text-white shadow-xl">
+                        <h4 class="text-xs font-black opacity-60 uppercase tracking-widest mb-2">Authenticated As</h4>
+                        <h2 class="text-4xl font-black italic mb-4">${me.name}</h2>
+                        <span class="px-4 py-1 bg-white/20 rounded-lg text-xs font-bold uppercase border border-white/20">Access: ${me.role}</span>
+                    </div>
+                </div>`;
+        }
+
+        function uiPersonnel() {
+            document.getElementById('portal-title').innerText = "Personnel Control";
             document.getElementById('portal-content').innerHTML = `
                 <div class="max-w-xl space-y-6">
-                    <h3 class="text-2xl font-black text-blue-900 italic">Enroll New Staff/Learner</h3>
+                    <h3 class="text-2xl font-black text-blue-900 italic uppercase">Enrollment Portal</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <input id="p-id" placeholder="LIN / Staff ID" class="p-4 bg-slate-50 border rounded-2xl">
-                        <input id="p-name" placeholder="Full Name" class="p-4 bg-slate-50 border rounded-2xl">
-                        <select id="p-role" class="p-4 bg-slate-50 border rounded-2xl">
+                        <input id="p-id" placeholder="LIN / Staff ID" class="p-4 bg-slate-50 border rounded-2xl outline-none focus:ring-2 focus:ring-blue-600">
+                        <input id="p-name" placeholder="Full Name" class="p-4 bg-slate-50 border rounded-2xl outline-none focus:ring-2 focus:ring-blue-600">
+                        <select id="p-role" class="p-4 bg-slate-50 border rounded-2xl outline-none">
                             <option value="learner">Learner</option><option value="teacher">Teacher</option>
-                            <option value="admin">Headteacher</option><option value="dev">Developer</option>
+                            <option value="bursar">Bursar</option><option value="admin">Headteacher</option>
                         </select>
-                        <input id="p-pw" placeholder="Security PIN" class="p-4 bg-slate-50 border rounded-2xl">
+                        <input id="p-pw" placeholder="Security PIN" class="p-4 bg-slate-50 border rounded-2xl outline-none">
                     </div>
-                    <button onclick="saveUser()" class="w-full bg-blue-600 text-white p-5 rounded-2xl font-black shadow-lg hover:scale-[1.02] transition">SYNC TO CLOUD</button>
+                    <button onclick="saveUser()" class="w-full bg-blue-600 text-white p-5 rounded-2xl font-black shadow-lg">SYNC IDENTITY TO CLOUD</button>
                 </div>`;
         }
 
@@ -126,16 +146,18 @@
                 password: document.getElementById('p-pw').value
             };
             await db.collection("users").doc(id).set(data);
-            alert("✅ Identity Successfully Registered.");
+            alert("✅ Identity Locked into Server.");
         }
 
-        // --- PANEL: ACADEMICS (NCDC 80/20) ---
         function uiAcademics() {
-            document.getElementById('portal-title').innerText = "Mark Engine";
+            document.getElementById('portal-title').innerText = "Academic Hub";
             document.getElementById('portal-content').innerHTML = `
                 <div class="max-w-md space-y-4">
-                    <h3 class="text-2xl font-black text-blue-900 italic uppercase">Result Input</h3>
+                    <h3 class="text-2xl font-black text-blue-900 italic">NCDC 80/20 Grading Engine</h3>
                     <input id="m-id" placeholder="Student LIN" class="w-full p-4 border rounded-2xl bg-slate-50">
+                    <select id="m-sub" class="w-full p-4 border rounded-2xl bg-slate-50">
+                        <option>Mathematics</option><option>English</option><option>Physics</option><option>Chemistry</option>
+                    </select>
                     <div class="flex gap-4">
                         <div class="w-1/2">
                             <label class="text-[10px] font-bold text-slate-400">AoI (MAX 3.0)</label>
@@ -146,39 +168,44 @@
                             <input id="m-exam" type="number" class="w-full p-4 border rounded-2xl">
                         </div>
                     </div>
-                    <button onclick="saveMark()" class="w-full bg-slate-900 text-white p-5 rounded-2xl font-black">SYNC MARKS</button>
+                    <button onclick="saveMark()" class="w-full bg-slate-900 text-white p-5 rounded-2xl font-black shadow-xl">POST ACADEMIC RECORD</button>
                 </div>`;
         }
 
         async function saveMark() {
             const sid = document.getElementById('m-id').value.toLowerCase();
+            const sub = document.getElementById('m-sub').value;
             const aoi = parseFloat(document.getElementById('m-aoi').value);
             const exam = parseFloat(document.getElementById('m-exam').value);
             
-            // NCDC CALCULATION LOGIC
-            const finalScore = ((aoi/3)*20) + (exam * 0.8);
+            // MATH BRAIN: (AoI/3 * 20) + (Exam * 0.8)
+            const final = ((aoi/3)*20) + (exam * 0.8);
 
-            await db.collection("marks").doc(sid).set({
-                student: sid, aoi, exam, finalScore,
-                updatedBy: me.name,
-                ts: new Date().getTime()
-            }, {merge: true});
-            alert("🎯 Recorded! Final Grade: " + finalScore.toFixed(1) + "%");
+            await db.collection("marks").doc(`${sid}_${sub}`).set({
+                student: sid, subject: sub, aoi, exam, finalScore: final.toFixed(1),
+                teacher: me.name, timestamp: new Date().toLocaleString()
+            });
+            alert("🎯 Marks Synced! Final Score: " + final.toFixed(1) + "%");
         }
 
-        function showDashboard() {
-            document.getElementById('portal-title').innerText = "Dashboard";
+        function uiFinance() {
+            document.getElementById('portal-title').innerText = "Bursary Hub";
             document.getElementById('portal-content').innerHTML = `
-                <div class="bg-blue-600 p-12 rounded-[3rem] text-white shadow-2xl">
-                    <p class="text-xs font-black opacity-60 uppercase tracking-[0.3em] mb-3">Titanium Nexus Authorized</p>
-                    <h1 class="text-5xl font-black italic mb-6">Hello, ${me.name}!</h1>
-                    <span class="px-5 py-2 bg-white/20 rounded-xl font-bold uppercase text-sm border border-white/30">System Role: ${me.role}</span>
+                <div class="max-w-md space-y-4">
+                    <input id="f-id" placeholder="Student LIN" class="w-full p-4 border rounded-2xl">
+                    <input id="f-paid" type="number" placeholder="Amount Paid" class="w-full p-4 border rounded-2xl">
+                    <button onclick="alert('Finance Synced')" class="w-full bg-green-600 text-white p-5 rounded-2xl font-black uppercase">Post Payment</button>
                 </div>`;
         }
 
-        function uiReports() {
-            document.getElementById('portal-title').innerText = "Report Center";
-            document.getElementById('portal-content').innerHTML = `<p class="text-slate-500 italic">Report generation engine is active. Ready to print.</p>`;
+        function uiStudentPortal() {
+            document.getElementById('portal-title').innerText = "Academic Records";
+            document.getElementById('portal-content').innerHTML = `
+                <div class="text-center py-12">
+                    <h3 class="text-3xl font-black italic mb-4">Transcript Access</h3>
+                    <p class="text-slate-500 font-medium mb-10">Searching cloud for records related to ID: ${me.id}...</p>
+                    <button onclick="window.print()" class="bg-blue-600 text-white px-10 py-4 rounded-full font-black shadow-lg">Download Report Card</button>
+                </div>`;
         }
     </script>
 </body>
