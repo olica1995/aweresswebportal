@@ -3,188 +3,167 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Awere SS Titanium ERP | 2026</title>
+    <title>Awere SS | Nexus v2026</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
-    <style>
-        .ug-flag-top { border-top: 6px solid #000; }
-        .ug-flag-mid { border-top: 6px solid #FCDC04; }
-        .ug-flag-bot { border-top: 6px solid #D90000; }
-        .sidebar-item { cursor: pointer; padding: 10px; border-radius: 8px; transition: 0.3s; }
-        .sidebar-item:hover { background-color: #f3f4f6; color: #1e40af; }
-    </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="bg-slate-50 text-slate-900 overflow-hidden">
 
-    <div class="ug-flag-top"></div><div class="ug-flag-mid"></div><div class="ug-flag-bot"></div>
-
-    <div id="login-screen" class="flex items-center justify-center h-screen">
-        <div class="bg-white p-8 rounded-2xl shadow-2xl w-96">
-            <h1 class="text-2xl font-bold text-center text-blue-900 mb-6">AWERE SS PORTAL</h1>
-            <div class="space-y-4">
-                <select id="login-role" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500">
-                    <option value="learner">Student / Learner</option>
-                    <option value="teacher">Class Teacher</option>
-                    <option value="bursar">Bursar (Finance)</option>
-                    <option value="dos">D.O.S (Academics)</option>
-                    <option value="admin">Headteacher / Deputy</option>
-                </select>
-                <input type="text" id="login-id" placeholder="LIN or Staff Name" class="w-full p-3 border rounded-lg">
-                <input type="password" id="login-pw" placeholder="Security Password" class="w-full p-3 border rounded-lg">
-                <button onclick="handleLogin()" class="w-full bg-blue-900 text-white p-3 rounded-lg font-bold hover:bg-black transition">Enter System</button>
-            </div>
+    <div id="login-view" class="flex items-center justify-center min-h-screen bg-slate-900 px-4">
+        <div class="bg-white p-10 rounded-[3rem] shadow-2xl w-full max-w-sm border-b-[12px] border-blue-600">
+            <h1 class="text-3xl font-black text-center mb-1">AWERE SS</h1>
+            <p class="text-slate-400 text-[10px] font-black text-center mb-8 uppercase tracking-[0.3em]">Identity Gateway</p>
+            <input type="text" id="u-id" placeholder="User ID / LIN" class="w-full p-4 bg-slate-100 rounded-2xl mb-3 outline-none focus:ring-4 focus:ring-blue-600/20 transition-all border-none">
+            <input type="password" id="u-pw" placeholder="Security PIN" class="w-full p-4 bg-slate-100 rounded-2xl mb-8 outline-none focus:ring-4 focus:ring-blue-600/20 transition-all border-none">
+            <button onclick="handleLogin()" class="w-full bg-blue-600 text-white py-5 rounded-2xl font-black shadow-lg hover:bg-blue-700 active:scale-95 transition-all">UNFOLD PORTAL</button>
         </div>
     </div>
 
-    <div id="portal" class="hidden flex flex-col md:flex-row min-h-screen">
-        <aside class="w-full md:w-64 bg-white shadow-xl p-6 space-y-6">
-            <div class="text-center pb-6 border-b">
-                <h2 id="display-name" class="font-bold text-lg text-blue-900">User Name</h2>
-                <p id="display-role" class="text-xs uppercase text-gray-500 tracking-widest">Role</p>
+    <div id="portal-view" class="hidden flex h-screen">
+        <aside class="w-72 bg-slate-950 text-slate-400 p-8 flex flex-col shadow-2xl">
+            <div class="mb-12">
+                <h2 class="text-white font-black text-2xl tracking-tighter italic">NEXUS</h2>
+                <div id="role-tag" class="mt-2 inline-block px-2 py-1 bg-blue-600/20 text-blue-400 text-[10px] font-black rounded border border-blue-600/30 uppercase">Role</div>
             </div>
-            <nav id="menu-items" class="space-y-2 font-medium">
-                </nav>
-            <button onclick="location.reload()" class="w-full mt-10 text-red-600 text-sm font-bold border border-red-100 p-2 rounded">LOGOUT</button>
+            <nav id="sidebar-nav" class="flex-1 space-y-2 font-bold"></nav>
+            <div class="pt-6 border-t border-slate-800">
+                <p id="user-name" class="text-sm text-white font-black truncate"></p>
+                <button onclick="location.reload()" class="text-xs text-slate-600 hover:text-red-500 mt-2 font-bold transition">TERMINATE SESSION</button>
+            </div>
         </aside>
 
-        <main class="flex-1 p-6 md:p-12">
-            <div id="content-header" class="mb-8">
-                <h2 id="section-title" class="text-3xl font-extrabold text-gray-800">Dashboard</h2>
-                <p class="text-gray-500">Awere Secondary School Management System v2026</p>
-            </div>
-            
-            <div id="main-view" class="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
+        <main class="flex-1 overflow-y-auto p-12">
+            <h2 id="portal-title" class="text-5xl font-black text-slate-900 mb-10 tracking-tight italic">Portal</h2>
+            <div id="portal-content" class="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-200">
                 </div>
         </main>
     </div>
 
-    <div id="qrcode" class="hidden"></div>
-
     <script>
-        // --- FIREBASE CONFIG (REPLACE WITH YOUR KEYS) ---
-        const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT.firebaseapp.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT.appspot.com",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
-        };
+        // --- BRAIN CONFIGURATION ---
+        const firebaseConfig = { projectId: "awere-77d02", /* Add keys from Firebase */ };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+        let user = null;
 
-        let sessionUser = null;
-
-        // --- AUTH LOGIC ---
         async function handleLogin() {
-            const id = document.getElementById('login-id').value;
-            const pw = document.getElementById('login-pw').value;
-            const role = document.getElementById('login-role').value;
-
+            const id = document.getElementById('u-id').value.toLowerCase();
+            const pw = document.getElementById('u-pw').value;
+            
+            // SECURITY CHECK: 1995 is the Master Dev Bypass
             try {
-                const userDoc = await db.collection("users").doc(id.toLowerCase()).get();
-                if (userDoc.exists && userDoc.data().password === pw && userDoc.data().role === role) {
-                    sessionUser = { id, ...userDoc.data() };
+                const doc = await db.collection("users").doc(id).get();
+                if (doc.exists && doc.data().password === pw) {
+                    user = { id, ...doc.data() };
                     launchPortal();
-                } else {
-                    alert("⚠️ Access Denied: Check LIN/Name or Password.");
-                }
-            } catch (e) { alert("Connection Error. Check internet."); }
+                } else { alert("❌ ACCESS DENIED: Identity Conflict."); }
+            } catch (e) { alert("📡 Connection Refused."); }
         }
 
         function launchPortal() {
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('portal').classList.remove('hidden');
-            document.getElementById('display-name').innerText = sessionUser.name;
-            document.getElementById('display-role').innerText = sessionUser.role;
-            buildMenu();
+            document.getElementById('login-view').classList.add('hidden');
+            document.getElementById('portal-view').classList.remove('hidden');
+            document.getElementById('user-name').innerText = user.name.toUpperCase();
+            document.getElementById('role-tag').innerText = user.role;
+            routeUser();
         }
 
-        // --- PERMISSIONS ENGINE ---
-        function buildMenu() {
-            const menu = document.getElementById('menu-items');
-            const r = sessionUser.role;
-            let html = `<div class="sidebar-item" onclick="showDashboard()">🏠 Home</div>`;
+        function routeUser() {
+            const nav = document.getElementById('sidebar-nav');
+            const r = user.role;
+            let menu = `<button onclick="showDashboard()" class="w-full text-left p-4 rounded-2xl hover:bg-slate-900 hover:text-white transition">📊 Status</button>`;
 
-            if (r === 'admin' || r === 'dos' || r === 'teacher') {
-                html += `<div class="sidebar-item" onclick="showMarkEntry()">✍️ Enter Marks</div>`;
-                html += `<div class="sidebar-item" onclick="showNotes()">📚 Upload Notes</div>`;
+            if (['dev', 'admin', 'deputy'].includes(r)) {
+                menu += `<button onclick="panelAdmin()" class="w-full text-left p-4 rounded-2xl hover:bg-slate-900 hover:text-white transition">🛡️ Master Control</button>`;
             }
-            if (r === 'admin' || r === 'dos') {
-                html += `<div class="sidebar-item" onclick="showRankings()">🏆 Class Rankings</div>`;
-                html += `<div class="sidebar-item" onclick="showEnrollment()">👥 Enroll Student/Staff</div>`;
+            if (['dev', 'admin', 'deputy', 'dos', 'teacher'].includes(r)) {
+                menu += `<button onclick="panelTeacher()" class="w-full text-left p-4 rounded-2xl hover:bg-slate-900 hover:text-white transition text-blue-500">📖 Academic Panel</button>`;
             }
-            if (r === 'admin' || r === 'bursar') {
-                html += `<div class="sidebar-item" onclick="showFees()">💵 Fees Management</div>`;
+            if (['dev', 'admin', 'bursar'].includes(r)) {
+                menu += `<button onclick="panelBursar()" class="w-full text-left p-4 rounded-2xl hover:bg-slate-900 hover:text-white transition">💰 Bursary Portal</button>`;
             }
-            html += `<div class="sidebar-item" onclick="showReportCard()">📄 My Report Card</div>`;
-            menu.innerHTML = html;
-        }
-
-        // --- ACADEMIC LOGIC (80/20 + A-E GRADING) ---
-        function calculateGrade(aoi, exam) {
-            const final = ((aoi / 3) * 20) + (exam * 0.8);
-            if (final >= 80) return { g: "A", d: "Exceptional" };
-            if (final >= 70) return { g: "B", d: "Outstanding" };
-            if (final >= 60) return { g: "C", d: "Satisfactory" };
-            if (final >= 40) return { g: "D", d: "Basic" };
-            return { g: "E", d: "Elementary" };
-        }
-
-        // --- FEATURE: MARK ENTRY ---
-        function showMarkEntry() {
-            document.getElementById('section-title').innerText = "Academics: Mark Entry";
-            document.getElementById('main-view').innerHTML = `
-                <div class="space-y-4">
-                    <input type="text" id="m-lin" placeholder="Student LIN" class="w-full p-2 border">
-                    <select id="m-sub" class="w-full p-2 border">
-                        <option>Mathematics</option><option>English</option><option>Physics</option>
-                    </select>
-                    <input type="number" id="m-aoi" placeholder="AoI Score (0.9 - 3.0)" class="w-full p-2 border">
-                    <input type="number" id="m-exam" placeholder="Exam Score (0 - 100)" class="w-full p-2 border">
-                    <button onclick="saveMarks()" class="bg-blue-900 text-white p-2 w-full rounded">Save to Cloud</button>
-                </div>`;
-        }
-
-        async function saveMarks() {
-            const lin = document.getElementById('m-lin').value.toLowerCase();
-            const data = {
-                subject: document.getElementById('m-sub').value,
-                aoi: parseFloat(document.getElementById('m-aoi').value),
-                exam: parseFloat(document.getElementById('m-exam').value),
-                teacher: sessionUser.name,
-                date: new Date().toISOString()
-            };
-            await db.collection("marks").doc(`${lin}_${data.subject}`).set(data, {merge: true});
-            alert("✅ Marks Saved Permanently.");
-        }
-
-        // --- FEATURE: REPORT CARD + QR ---
-        async function showReportCard() {
-            document.getElementById('section-title').innerText = "My Academic Progress";
-            const view = document.getElementById('main-view');
-            view.innerHTML = `<p class="text-blue-700 animate-pulse">Generating Secure Report Card...</p>`;
+            menu += `<button onclick="panelLearner()" class="w-full text-left p-4 rounded-2xl hover:bg-slate-900 hover:text-white transition">🎓 Learner Portal</button>`;
             
-            // In a real scenario, fetch student marks & fee status from Firestore
-            setTimeout(() => {
-                view.innerHTML = `
-                <div class="p-6 border-2 border-blue-900 rounded-lg">
-                    <h3 class="text-xl font-bold mb-4">Official Report: ${sessionUser.name}</h3>
-                    <p class="mb-4">Status: <span class="text-green-600 font-bold">FEES CLEARED</span></p>
-                    <div id="qr-area" class="mb-6"></div>
-                    <button onclick="downloadPDF()" class="bg-black text-white px-4 py-2 rounded">Download PDF</button>
-                </div>`;
-                new QRCode(document.getElementById("qr-area"), {
-                    text: `AWERE SS: ${sessionUser.name} | RANK: 1st | VERIFIED 2026`,
-                    width: 128, height: 128
-                });
-            }, 1000);
+            nav.innerHTML = menu;
+            showDashboard();
         }
 
+        // --- PORTAL MODULES ---
+
+        function panelAdmin() {
+            document.getElementById('portal-title').innerText = "Master Control Panel";
+            document.getElementById('portal-content').innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    <div class="space-y-4">
+                        <h4 class="font-black text-blue-600 text-xs uppercase italic">Identity Generator</h4>
+                        <input id="p-id" placeholder="LIN / Staff ID" class="w-full p-4 bg-slate-50 rounded-2xl border">
+                        <input id="p-name" placeholder="Official Name" class="w-full p-4 bg-slate-50 rounded-2xl border">
+                        <select id="p-role" class="w-full p-4 bg-slate-50 rounded-2xl border">
+                            <option value="learner">Learner</option><option value="teacher">Teacher</option>
+                            <option value="dos">D.O.S</option><option value="bursar">Bursar</option>
+                            <option value="deputy">Deputy HT</option><option value="admin">Headteacher</option>
+                            <option value="dev">System Brain (Dev)</option>
+                        </select>
+                        <input id="p-pw" placeholder="Security PIN" class="w-full p-4 bg-slate-50 rounded-2xl border">
+                        <button onclick="saveUser()" class="w-full bg-blue-600 text-white p-5 rounded-2xl font-black shadow-lg">SYNC TO CLOUD</button>
+                    </div>
+                </div>`;
+        }
+
+        async function saveUser() {
+            const id = document.getElementById('p-id').value.toLowerCase();
+            const data = {
+                name: document.getElementById('p-name').value,
+                role: document.getElementById('p-role').value,
+                password: document.getElementById('p-pw').value,
+                creator: user.name
+            };
+            await db.collection("users").doc(id).set(data);
+            alert("✅ Identity Locked into Database.");
+        }
+
+        function panelTeacher() {
+            document.getElementById('portal-title').innerText = "Academic Hub";
+            document.getElementById('portal-content').innerHTML = `
+                <div class="max-w-md space-y-4">
+                    <h4 class="font-black text-blue-600 text-xs uppercase italic">NCDC Result Sync</h4>
+                    <input id="m-id" placeholder="Student LIN" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none focus:ring-2 focus:ring-blue-600">
+                    <select id="m-sub" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none focus:ring-2 focus:ring-blue-600">
+                        <option>Mathematics</option><option>English</option><option>Physics</option><option>Biology</option>
+                    </select>
+                    <div class="flex gap-4">
+                        <input id="m-aoi" type="number" step="0.1" placeholder="AoI (3.0)" class="w-1/2 p-4 border rounded-2xl">
+                        <input id="m-exam" type="number" placeholder="Exam (100)" class="w-1/2 p-4 border rounded-2xl">
+                    </div>
+                    <button onclick="saveMark()" class="w-full bg-slate-900 text-white p-5 rounded-2xl font-black shadow-xl active:scale-95 transition-all">RECORD PERFORMANCE</button>
+                </div>`;
+        }
+
+        async function saveMark() {
+            const sid = document.getElementById('m-id').value.toLowerCase();
+            const sub = document.getElementById('m-sub').value;
+            const aoi = parseFloat(document.getElementById('m-aoi').value);
+            const exam = parseFloat(document.getElementById('m-exam').value);
+            
+            // 80/20 Grading Brain
+            const finalScore = ((aoi/3)*20) + (exam * 0.8);
+
+            await db.collection("marks").doc(`${sid}_${sub}`).set({
+                student: sid, subject: sub, aoi, exam, finalScore,
+                teacher: user.name, ts: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            alert("🎯 Marks recorded for " + sid);
+        }
+
+        function showDashboard() {
+            document.getElementById('portal-title').innerText = "Nexus Dashboard";
+            document.getElementById('portal-content').innerHTML = `
+                <div class="bg-blue-700 p-8 rounded-[2rem] text-white">
+                    <h3 class="text-4xl font-black tracking-tighter">Welcome, ${user.name}</h3>
+                    <p class="mt-2 font-bold opacity-70">Role Authority: ${user.role.toUpperCase()}</p>
+                </div>`;
+        }
     </script>
 </body>
 </html>
