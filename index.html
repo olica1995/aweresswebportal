@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Awere SS | Comprehensive ERP</title>
+    <title>Awere SS Master Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -12,33 +12,34 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f8fafc; color: #0f172a; }
-        .glass { background: white; border: 1px solid #e2e8f0; border-radius: 24px; padding: 24px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05); }
+        .glass { background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
         .btn-primary { @apply bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700 active:scale-95 transition-all shadow-lg shadow-blue-100; }
-        .btn-danger { @apply bg-red-50 text-red-600 px-6 py-3 rounded-xl font-bold hover:bg-red-600 hover:text-white transition-all; }
-        input, select { @apply bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm; }
+        input, select { @apply bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm w-full; }
+        .sidebar-item { @apply w-full text-left p-3 font-bold text-sm rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all flex items-center gap-3 mb-1; }
     </style>
 </head>
-<body class="antialiased">
+<body>
 
     <div id="login-view" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900 px-6">
-        <div class="w-full max-w-md bg-white p-10 rounded-[3rem] shadow-2xl">
-            <h1 class="text-3xl font-extrabold text-center mb-8 italic uppercase">Awere SS Portal</h1>
+        <div class="w-full max-w-md bg-white p-10 rounded-[2.5rem] shadow-2xl">
+            <h1 class="text-3xl font-extrabold text-center mb-2 italic tracking-tighter text-slate-800">AWERE SS</h1>
+            <p class="text-center text-slate-400 text-[10px] font-black uppercase tracking-widest mb-8">Official Management System</p>
             <div class="space-y-4">
-                <input type="text" id="u-id" placeholder="Staff ID / LIN" class="w-full">
-                <input type="password" id="u-pw" placeholder="Security PIN" class="w-full">
-                <button onclick="handleLogin()" class="btn-primary w-full">Access Portal</button>
+                <input type="text" id="u-id" placeholder="Staff ID / LIN">
+                <input type="password" id="u-pw" placeholder="Security PIN">
+                <button onclick="handleLogin()" class="btn-primary w-full">Sign In</button>
             </div>
         </div>
     </div>
 
     <div id="portal-view" class="hidden min-h-screen flex flex-col lg:flex-row">
         <aside class="w-full lg:w-72 bg-white border-r border-slate-100 p-8 flex flex-col">
-            <div class="mb-10 text-2xl font-black italic tracking-tighter">AWERE SS</div>
-            <nav id="sidebar-nav" class="flex-1 space-y-1"></nav>
-            <div class="mt-8 pt-6 border-t">
-                <p id="user-display" class="font-bold text-sm truncate"></p>
-                <p id="role-display" class="text-[10px] text-blue-500 font-black uppercase mb-4"></p>
-                <button onclick="location.reload()" class="text-xs font-bold text-red-500 underline">Sign Out</button>
+            <div class="mb-10 text-2xl font-black italic text-blue-600 tracking-tighter">AWERE SS</div>
+            <nav id="sidebar-nav" class="flex-1"></nav>
+            <div class="mt-8 pt-6 border-t border-slate-100">
+                <p id="user-display" class="font-bold text-sm text-slate-900"></p>
+                <p id="role-display" class="text-[10px] text-blue-500 font-black uppercase"></p>
+                <button onclick="location.reload()" class="text-xs font-bold text-red-500 mt-4 underline">Logout</button>
             </div>
         </aside>
 
@@ -52,33 +53,33 @@
     </div>
 
     <script>
+        // --- CONFIG & CONSTANTS ---
         const CLASSES = ["S1", "S2", "S3", "S4", "S5", "S6"];
-        const SUB_O = ["English Language", "Mathematics", "Biology", "Physics", "Chemistry", "History", "Geography", "ICT", "Agriculture", "Kiswahili", "Literature", "CRE", "TD"];
-        const SUB_A = ["General Paper", "Sub Math", "Sub ICT", "Economics", "Entrepreneurship", "Physics", "Chemistry", "Biology", "Mathematics", "Geography", "History", "Literature", "CRE"];
+        const SUB_O = ["English", "Mathematics", "Biology", "Physics", "Chemistry", "History", "Geography", "ICT", "Agriculture", "Kiswahili", "Literature", "CRE", "TD"];
+        const SUB_A = ["General Paper", "Sub Math", "Sub ICT", "Economics", "Ent", "Physics", "Chemistry", "Biology", "Math", "Geography", "History", "Literature", "CRE"];
 
-        // Firebase Config
         const firebaseConfig = { apiKey: "AIzaSyDUoYRjlHxBg3-ddFtsk2tGXAn9X46moHc", authDomain: "awere-erp.firebaseapp.com", projectId: "awere-erp", storageBucket: "awere-erp.firebasestorage.app", messagingSenderId: "139972783523", appId: "1:139972783523:web:f9591d033305bfabbe7e16" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
         let me = null;
-        let config = { term: "Term 1", year: "2026", mode: "AoI" };
+        let config = { term: "Term 1", year: "2026" };
 
         async function init() {
             const snap = await db.collection("settings").doc("global").get();
             if(snap.exists) config = snap.data();
-            document.getElementById('global-tag').innerText = `${config.year} | ${config.term} | ${config.mode}`;
+            document.getElementById('global-tag').innerText = `${config.year} • ${config.term}`;
         }
         init();
 
-        // AUTH
+        // --- AUTH ---
         async function handleLogin() {
             const id = document.getElementById('u-id').value.trim().toLowerCase();
             const pw = document.getElementById('u-pw').value.trim();
             if (id === "admin" && pw === "1995") { me = { name: "Olica", role: "dev", id: "admin" }; launch(); return; }
             const doc = await db.collection("users").doc(id).get();
             if (doc.exists && doc.data().password == pw) { me = { ...doc.data(), id }; launch(); }
-            else alert("Invalid Credentials");
+            else alert("Invalid ID or PIN");
         }
 
         function launch() {
@@ -93,54 +94,193 @@
         function buildNav() {
             const nav = document.getElementById('sidebar-nav');
             const r = me.role;
-            let h = `<button onclick="showDash()" class="w-full text-left p-3 font-bold text-sm rounded-xl hover:bg-slate-50">🏠 Home</button>`;
-            if (['dev', 'headteacher', 'deputy', 'dos'].includes(r)) {
-                h += `<button onclick="uiRegistry()" class="w-full text-left p-3 font-bold text-sm rounded-xl hover:bg-slate-50">🔍 Registry</button>`;
-                h += `<button onclick="uiEnroll()" class="w-full text-left p-3 font-bold text-sm rounded-xl hover:bg-slate-50">👤 Enrollment</button>`;
-                h += `<button onclick="uiConfig()" class="w-full text-left p-3 font-bold text-sm rounded-xl hover:bg-slate-50">⚙️ Settings</button>`;
+            const isAdmin = ['dev', 'headteacher', 'deputy', 'dos'].includes(r);
+            let h = `<button onclick="showDash()" class="sidebar-item">🏠 Home</button>`;
+            if (isAdmin) {
+                h += `<button onclick="uiRegistry()" class="sidebar-item">🔍 Registry</button>`;
+                h += `<button onclick="uiEnroll()" class="sidebar-item">👤 Registration</button>`;
+                h += `<button onclick="uiBulkPromote()" class="sidebar-item">🚀 Bulk Promote</button>`;
             }
-            if (['dev', 'teacher'].includes(r)) h += `<button onclick="uiTeacherMarks()" class="w-full text-left p-3 font-bold text-sm rounded-xl hover:bg-slate-50">📝 Mark Entry</button>`;
-            if (['dev', 'bursar'].includes(r)) h += `<button onclick="uiBursarLedger()" class="w-full text-left p-3 font-bold text-sm rounded-xl hover:bg-slate-50">💰 Fees Hub</button>`;
-            if (r === 'learner') h += `<button onclick="uiLearnerPortal()" class="w-full text-left p-3 font-bold text-sm rounded-xl hover:bg-slate-50">📚 Subjects</button>`;
-            h += `<button onclick="uiReports()" class="w-full text-left p-3 font-bold text-sm rounded-xl hover:bg-slate-50">📄 Report Cards</button>`;
+            if (['dev', 'headteacher', 'deputy', 'dos', 'teacher'].includes(r)) h += `<button onclick="uiTeacherMarks()" class="sidebar-item">📝 Enter Marks</button>`;
+            if (['dev', 'bursar'].includes(r)) h += `<button onclick="uiBursarLedger()" class="sidebar-item">💰 Fees Ledger</button>`;
+            if (r === 'learner') h += `<button onclick="uiLearnerPortal()" class="sidebar-item">📚 My Subjects</button>`;
+            h += `<button onclick="uiReports()" class="sidebar-item">📄 Report Hub</button>`;
             nav.innerHTML = h;
         }
 
-        // --- ⚙️ CONTROL PANEL (RESTORED) ---
-        function uiConfig() {
-            document.getElementById('portal-title').innerText = "System Configuration";
+        // --- ACADEMICS: MARK ENTRY ---
+        async function uiTeacherMarks() {
+            document.getElementById('portal-title').innerText = "Academic Grading";
+            const loads = me.assignments || [];
+            let options = loads.map(a => `<option value="${a.class}|${a.subject}">${a.subject} (${a.class})</option>`).join('');
+            
             document.getElementById('portal-content').innerHTML = `
-                <div class="glass max-w-md space-y-4">
-                    <div><label class="text-[10px] font-black">YEAR</label><input id="c-year" type="number" value="${config.year}" class="w-full"></div>
-                    <div><label class="text-[10px] font-black">TERM</label><select id="c-term" class="w-full"><option>Term 1</option><option>Term 2</option><option>Term 3</option></select></div>
-                    <div><label class="text-[10px] font-black">ASSESSMENT</label><select id="c-mode" class="w-full"><option>AoI</option><option>End of Term</option></select></div>
-                    <button onclick="saveGlobalConfig()" class="btn-primary w-full">Update System State</button>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="glass h-fit space-y-4">
+                        <h4 class="text-[10px] font-black uppercase text-blue-600">Score Input</h4>
+                        <select id="m-assign">${options}</select>
+                        <input id="m-lin" placeholder="Learner LIN">
+                        <div class="flex gap-2"><input id="m-aoi" placeholder="AoI (0-3)" type="number" step="0.1"><input id="m-exam" placeholder="Exam (100)" type="number"></div>
+                        <button onclick="saveValidatedMarks()" class="btn-primary w-full">Save Marks</button>
+                    </div>
+                    <div class="lg:col-span-2 glass overflow-x-auto">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="text-[10px] font-black uppercase">Recent Records</h4>
+                            <button onclick="downloadClassList()" class="text-[10px] font-bold underline">Download Class List</button>
+                        </div>
+                        <table class="w-full text-xs text-left">
+                            <thead class="border-b"><tr><th class="py-2">LIN</th><th>Sub</th><th>Score</th><th>Grade</th></tr></thead>
+                            <tbody id="m-list" class="divide-y"></tbody>
+                        </table>
+                    </div>
                 </div>`;
-        }
-        async function saveGlobalConfig() {
-            const data = { year: document.getElementById('c-year').value, term: document.getElementById('c-term').value, mode: document.getElementById('c-mode').value };
-            await db.collection("settings").doc("global").set(data);
-            location.reload();
+            loadRecentMarks();
         }
 
-        // --- 🔍 REGISTRY & SEARCH (RESTORED + CLEAN) ---
+        async function saveValidatedMarks() {
+            const [selClass, selSub] = document.getElementById('m-assign').value.split('|');
+            const lin = document.getElementById('m-lin').value.trim().toLowerCase();
+            const aoi = parseFloat(document.getElementById('m-aoi').value) || 0;
+            const exam = parseFloat(document.getElementById('m-exam').value) || 0;
+
+            const sDoc = await db.collection("users").doc(lin).get();
+            if(!sDoc.exists) return alert("Student not found.");
+            if(!sDoc.data().mySubjects?.includes(selSub)) return alert("Student hasn't ticked this subject.");
+
+            // Fixed Logic: AoI (weighted to 20) + Exam (weighted to 80)
+            const finalScore = ((aoi / 3) * 20) + (exam * 0.8);
+            let grade = "";
+            if(selClass.includes('S5') || selClass.includes('S6')) {
+                if(finalScore >= 80) grade = "A"; else if(finalScore >= 75) grade = "B";
+                else if(finalScore >= 70) grade = "C"; else if(finalScore >= 65) grade = "D";
+                else if(finalScore >= 60) grade = "E"; else if(finalScore >= 50) grade = "O";
+                else grade = "F";
+            } else {
+                grade = aoi >= 2.5 ? "3" : (aoi >= 1.5 ? "2" : "1");
+            }
+
+            await db.collection("marks").doc(`${lin}_${selSub}_${config.year}`).set({
+                student: lin, subject: selSub, class: selClass, aoi, exam, 
+                grade, total: finalScore.toFixed(1), year: config.year, term: config.term, teacher: me.name
+            });
+            alert("Score Recorded.");
+            loadRecentMarks();
+        }
+
+        async function loadRecentMarks() {
+            const snap = await db.collection("marks").where("teacher", "==", me.name).limit(10).get();
+            let html = "";
+            snap.forEach(d => {
+                const m = d.data();
+                html += `<tr><td class="py-3 font-bold uppercase">${m.student}</td><td>${m.subject}</td><td class="font-bold text-blue-600">${m.total}%</td><td>${m.grade}</td></tr>`;
+            });
+            document.getElementById('m-list').innerHTML = html;
+        }
+
+        // --- BURSARY: LEDGER & HISTORY ---
+        function uiBursarLedger() {
+            document.getElementById('portal-title').innerText = "Fees Management";
+            document.getElementById('portal-content').innerHTML = `
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="glass space-y-4">
+                        <h4 class="text-[10px] font-black uppercase text-green-600">New Payment</h4>
+                        <input id="f-lin" placeholder="Learner LIN">
+                        <input id="f-amt" placeholder="Amount (UGX)" type="number">
+                        <button onclick="postPayment()" class="btn-primary w-full">Update Balance</button>
+                    </div>
+                    <div class="glass overflow-y-auto h-80">
+                        <h4 class="text-[10px] font-black uppercase mb-4">Debtors List</h4>
+                        <div id="f-list" class="divide-y text-xs"></div>
+                    </div>
+                </div>`;
+            loadFees();
+        }
+
+        async function postPayment() {
+            const lin = document.getElementById('f-lin').value.toLowerCase();
+            const amt = parseFloat(document.getElementById('f-amt').value) || 0;
+            const ref = db.collection("users").doc(lin);
+            const doc = await ref.get();
+            if(doc.exists) {
+                const current = doc.data().balance || 0;
+                await ref.update({ balance: current - amt });
+                alert("Payment Synchronized.");
+                loadFees();
+            }
+        }
+
+        async function loadFees() {
+            const snap = await db.collection("users").where("role", "==", "learner").get();
+            let html = "";
+            snap.forEach(d => {
+                const u = d.data();
+                html += `<div class="py-3 flex justify-between"><span>${u.name} (${d.id.toUpperCase()})</span><span class="font-black text-red-600">UGX ${u.balance.toLocaleString()}</span></div>`;
+            });
+            document.getElementById('f-list').innerHTML = html;
+        }
+
+        // --- REPORTS: FINANCIAL LOCK & PDF ---
+        function uiReports() {
+            document.getElementById('portal-title').innerText = "Report Hub";
+            document.getElementById('portal-content').innerHTML = `
+                <div class="glass max-w-lg mx-auto">
+                    <h4 class="text-[10px] font-black uppercase text-blue-600 mb-6">Verify & Print Report Card</h4>
+                    <input id="rep-lin" placeholder="Enter Student LIN" class="mb-4">
+                    <button onclick="verifyReport()" class="btn-primary w-full">Generate Official Report</button>
+                    <p class="text-[9px] mt-4 text-slate-400 font-bold uppercase italic text-center">Zero Balance Clearance Required</p>
+                </div>`;
+        }
+
+        async function verifyReport() {
+            const lin = document.getElementById('rep-lin').value.toLowerCase();
+            const doc = await db.collection("users").doc(lin).get();
+            if(!doc.exists) return alert("Invalid LIN.");
+            if(doc.data().balance > 0) return alert(`LOCKED: Student has an outstanding balance of UGX ${doc.data().balance.toLocaleString()}`);
+            
+            generateFullReportPDF(lin, doc.data());
+        }
+
+        async function generateFullReportPDF(lin, user) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const marksSnap = await db.collection("marks").where("student", "==", lin).where("year", "==", config.year).where("term", "==", config.term).get();
+            
+            doc.setFontSize(22); doc.text("AWERE SECONDARY SCHOOL", 105, 20, {align: 'center'});
+            doc.setFontSize(10); doc.text(`OFFICIAL PROGRESS REPORT: ${config.term} ${config.year}`, 105, 28, {align: 'center'});
+            
+            doc.line(15, 35, 195, 35);
+            doc.text(`NAME: ${user.name.toUpperCase()}`, 15, 45);
+            doc.text(`LIN: ${lin.toUpperCase()}`, 15, 50);
+            doc.text(`CLASS: ${user.class}`, 150, 45);
+
+            let rows = [];
+            marksSnap.forEach(m => {
+                const d = m.data();
+                rows.push([d.subject, d.aoi, d.exam, d.total + "%", d.grade]);
+            });
+
+            doc.autoTable({
+                startY: 60,
+                head: [['SUBJECT', 'AOI (3)', 'EXAM (100)', 'FINAL %', 'GRADE']],
+                body: rows,
+                theme: 'striped',
+                headStyles: {fillColor: [37, 99, 235]}
+            });
+
+            doc.text("Headteacher's Signature: ___________________", 15, doc.lastAutoTable.finalY + 30);
+            doc.save(`${lin}_Report_Card.pdf`);
+        }
+
+        // --- REGISTRY: BULK & INDIVIDUAL ---
         async function uiRegistry() {
             document.getElementById('portal-title').innerText = "Registry Search";
             document.getElementById('portal-content').innerHTML = `
-                <div class="glass mb-8 flex gap-4">
-                    <input id="r-search" onkeyup="searchRegistry()" placeholder="Search Name or ID..." class="flex-1">
-                    <select id="r-filter" onchange="searchRegistry()" class="w-48"><option value="ALL">Everyone</option><option value="learner">Learners</option><option value="teacher">Teachers</option></select>
-                </div>
-                <div class="glass overflow-x-auto">
-                    <table class="w-full text-left text-sm">
-                        <thead class="text-slate-400 border-b"><tr><th class="pb-4">ID</th><th class="pb-4">Name</th><th class="pb-4">Details</th><th class="pb-4">Actions</th></tr></thead>
-                        <tbody id="registry-body" class="divide-y divide-slate-50"></tbody>
-                    </table>
-                </div>`;
-            searchRegistry();
+                <div class="glass flex gap-4 mb-8"><input id="r-search" onkeyup="searchReg()" placeholder="Search Name/ID..."><select id="r-filter" onchange="searchReg()"><option value="ALL">All Categories</option><option value="learner">Learners</option><option value="teacher">Teachers</option></select></div>
+                <div class="glass overflow-x-auto"><table class="w-full text-left text-sm"><thead class="border-b"><tr><th>ID</th><th>Name</th><th>Class/Role</th><th>Actions</th></tr></thead><tbody id="reg-body" class="divide-y"></tbody></table></div>`;
+            searchReg();
         }
 
-        async function searchRegistry() {
+        async function searchReg() {
             const s = document.getElementById('r-search').value.toLowerCase();
             const f = document.getElementById('r-filter').value;
             const snap = await db.collection("users").get();
@@ -148,216 +288,101 @@
             snap.forEach(doc => {
                 const u = doc.data();
                 if((f === "ALL" || u.role === f) && (u.name.toLowerCase().includes(s) || doc.id.includes(s))) {
-                    html += `<tr>
-                        <td class="py-4 font-bold uppercase">${doc.id}</td>
-                        <td class="py-4">${u.name}</td>
-                        <td class="py-4 text-xs">${u.role === 'learner' ? u.class : 'Staff Member'}</td>
-                        <td class="py-4">
-                            ${u.role === 'learner' ? `<button onclick="uiBursarLedger('${doc.id}')" class="text-blue-600 font-bold mr-4">Fees</button>` : ''}
-                            <button onclick="deleteUser('${doc.id}')" class="text-red-500 font-bold">Delete</button>
-                        </td>
-                    </tr>`;
+                    html += `<tr><td class="py-4 font-bold uppercase">${doc.id}</td><td>${u.name}</td><td class="text-xs uppercase">${u.role==='learner'?u.class:u.role}</td>
+                    <td><button onclick="resetPassword('${doc.id}', '${u.role==='learner'?'1234':'0000'}')" class="text-blue-600 font-bold mr-2">Reset</button><button onclick="deleteUser('${doc.id}')" class="text-red-500 font-bold">Delete</button></td></tr>`;
                 }
             });
-            document.getElementById('registry-body').innerHTML = html;
+            document.getElementById('reg-body').innerHTML = html;
         }
 
-        async function deleteUser(id) { if(confirm("Permanently delete?")) { await db.collection("users").doc(id).delete(); searchRegistry(); } }
-
-        // --- 📝 TEACHER MARKS (RESTORED + REFINED) ---
-        async function uiTeacherMarks() {
-            document.getElementById('portal-title').innerText = "Academics";
-            const loads = me.assignments || [];
-            let options = loads.map(a => `<option value="${a.class}|${a.subject}">${a.subject} (${a.class})</option>`).join('');
-            
+        async function uiBulkPromote() {
+            document.getElementById('portal-title').innerText = "Bulk Promotion";
             document.getElementById('portal-content').innerHTML = `
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div class="glass h-fit space-y-4">
-                        <h3 class="font-black text-xs uppercase text-blue-600">Enter Scores</h3>
-                        <select id="m-assign" class="w-full">${options}</select>
-                        <input id="m-lin" placeholder="Student LIN" class="w-full">
-                        <div class="flex gap-2"><input id="m-aoi" placeholder="AoI (0-3)" type="number" step="0.1"><input id="m-exam" placeholder="Exam (100)" type="number"></div>
-                        <button onclick="saveMarks()" class="btn-primary w-full">Save Marks</button>
-                    </div>
-                    <div class="lg:col-span-2 glass">
-                        <div class="flex justify-between mb-4"><h3 class="font-bold text-sm">Recent Entries</h3><button onclick="downloadTeacherPDF()" class="text-xs underline font-bold">Download My Marks</button></div>
-                        <div id="m-list" class="text-xs"></div>
-                    </div>
-                </div>`;
-            loadRecentMarks();
-        }
-
-        async function saveMarks() {
-            const assign = document.getElementById('m-assign').value.split('|');
-            const lin = document.getElementById('m-lin').value.toLowerCase();
-            const aoi = parseFloat(document.getElementById('m-aoi').value) || 0;
-            const exam = parseFloat(document.getElementById('m-exam').value) || 0;
-            
-            // Grading logic for Report Cards
-            const finalScore = (aoi/3)*20 + (exam*0.8);
-            let grade = ""; 
-            if(assign[0].includes('S5') || assign[0].includes('S6')) {
-                if(finalScore >= 80) grade = "A";
-                else if(finalScore >= 75) grade = "B";
-                else if(finalScore >= 70) grade = "C";
-                else if(finalScore >= 65) grade = "D";
-                else if(finalScore >= 60) grade = "E";
-                else if(finalScore >= 50) grade = "O";
-                else grade = "F";
-            } else {
-                if(aoi >= 2.5) grade = "3 (Outstanding)";
-                else if(aoi >= 1.5) grade = "2 (Moderate)";
-                else grade = "1 (Basic)";
-            }
-
-            await db.collection("marks").doc(`${lin}_${assign[1]}_${config.year}`).set({
-                student: lin, subject: assign[1], class: assign[0], aoi, exam, 
-                grade: grade, total: finalScore.toFixed(1), teacher: me.name,
-                year: config.year, term: config.term
-            });
-            alert("Record Synchronized.");
-            loadRecentMarks();
-        }
-
-        async function loadRecentMarks() {
-            const snap = await db.collection("marks").where("teacher", "==", me.name).limit(10).get();
-            let h = `<table class="w-full"><thead><tr class="text-left opacity-50 border-b"><th>LIN</th><th>Sub</th><th>Class</th><th>Score</th><th>Grade</th></tr></thead><tbody>`;
-            snap.forEach(d => {
-                const m = d.data();
-                h += `<tr class="border-b"><td class="py-2 font-bold uppercase">${m.student}</td><td>${m.subject}</td><td>${m.class}</td><td class="font-black text-blue-600">${m.total}%</td><td>${m.grade}</td></tr>`;
-            });
-            document.getElementById('m-list').innerHTML = h + "</tbody></table>";
-        }
-
-        // --- 📄 REPORT HUB (NEW REFINED SYSTEM) ---
-        function uiReports() {
-            document.getElementById('portal-title').innerText = "Academic Reports";
-            document.getElementById('portal-content').innerHTML = `
-                <div class="glass max-w-lg">
-                    <h3 class="font-black text-xs uppercase mb-6">Generate Results</h3>
-                    <input id="rep-lin" placeholder="Student LIN Number" class="w-full mb-4">
-                    <button onclick="generateReportCard()" class="btn-primary w-full italic">GENERATE REPORT CARD (PDF)</button>
+                <div class="glass max-w-md space-y-4">
+                    <p class="text-xs font-bold text-red-500">DANGER: THIS MOVES ENTIRE CLASSES</p>
+                    <select id="p-from">${CLASSES.map(c=>`<option>${c}</option>`).join('')}</select>
+                    <select id="p-to">${CLASSES.map(c=>`<option>${c}</option>`).join('')}<option>ALUMNI</option></select>
+                    <button onclick="massMove()" class="btn-primary w-full">PROMOTE ALL STUDENTS</button>
                 </div>`;
         }
 
-        async function generateReportCard() {
-            const lin = document.getElementById('rep-lin').value.toLowerCase();
-            const uDoc = await db.collection("users").doc(lin).get();
-            if(!uDoc.exists) return alert("Student not found.");
-            
-            const mSnap = await db.collection("marks").where("student", "==", lin).where("year", "==", config.year).where("term", "==", config.term).get();
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            
-            doc.setFontSize(18); doc.text("AWERE SECONDARY SCHOOL", 105, 20, {align:'center'});
-            doc.setFontSize(12); doc.text(`OFFICIAL PROGRESS REPORT - ${config.term} ${config.year}`, 105, 28, {align:'center'});
-            
-            doc.setFontSize(10);
-            doc.text(`NAME: ${uDoc.data().name.toUpperCase()}`, 15, 45);
-            doc.text(`LIN: ${lin.toUpperCase()}`, 15, 50);
-            doc.text(`CLASS: ${uDoc.data().class}`, 160, 45);
-
-            const rows = [];
-            mSnap.forEach(d => {
-                const m = d.data();
-                rows.push([m.subject, m.aoi, m.exam, m.total + "%", m.grade]);
-            });
-
-            doc.autoTable({
-                startY: 60,
-                head: [['SUBJECT', 'AOI', 'EXAM', 'TOTAL', 'GRADE/IDENTIFIER']],
-                body: rows,
-                theme: 'grid',
-                headStyles: {fillColor: [15, 23, 42]}
-            });
-
-            doc.save(`${lin}_Report.pdf`);
+        async function massMove() {
+            const f = document.getElementById('p-from').value;
+            const t = document.getElementById('p-to').value;
+            if(!confirm(`Move all students from ${f} to ${t}?`)) return;
+            const snap = await db.collection("users").where("role", "==", "learner").where("class", "==", f).get();
+            const batch = db.batch();
+            snap.forEach(d => batch.update(db.collection("users").doc(d.id), { class: t, mySubjects: [] }));
+            await batch.commit();
+            alert(`Moved ${snap.size} students. Their subject lists have been cleared for the new year.`);
         }
 
-        // --- 💰 BURSAR (RESTORED + FILTERED) ---
-        function uiBursarLedger(targetLin = "") {
-            document.getElementById('portal-title').innerText = "Fees Management";
+        // Dashboard & Helpers
+        function showDash() {
+            document.getElementById('portal-title').innerText = "Command Center";
+            document.getElementById('portal-content').innerHTML = `
+                <div class="p-20 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-[3rem] text-white shadow-2xl">
+                    <h2 class="text-5xl font-black italic tracking-tighter">${me.name}</h2>
+                    <p class="mt-4 font-bold uppercase tracking-widest text-xs opacity-80">${me.role} Portal Active • ${config.term} ${config.year}</p>
+                </div>`;
+        }
+
+        function uiLearnerPortal() {
+            document.getElementById('portal-title').innerText = "My Subject Registration";
+            const subs = (me.class === 'S5' || me.class === 'S6') ? SUB_A : SUB_O;
+            const picked = me.mySubjects || [];
+            document.getElementById('portal-content').innerHTML = `
+                <div class="glass max-w-4xl">
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3" id="sub-picker">
+                        ${subs.map(s => `<label class="flex items-center gap-3 p-4 border rounded-2xl hover:bg-blue-50 cursor-pointer"><input type="checkbox" value="${s}" ${picked.includes(s)?'checked':''}> <span class="text-sm font-bold">${s}</span></label>`).join('')}
+                    </div>
+                    <button onclick="saveStudentSubs()" class="btn-primary w-full mt-8">Confirm My Subjects</button>
+                </div>`;
+        }
+
+        async function saveStudentSubs() {
+            const sel = Array.from(document.querySelectorAll('#sub-picker input:checked')).map(i => i.value);
+            await db.collection("users").doc(me.id).update({ mySubjects: sel });
+            alert("Subject list updated.");
+        }
+
+        async function deleteUser(id) { if(confirm("Delete permanently?")) { await db.collection("users").doc(id).delete(); searchReg(); } }
+        async function resetPassword(id, pin) { if(confirm(`Reset PIN to ${pin}?`)) { await db.collection("users").doc(id).update({ password: pin }); alert("Done."); } }
+
+        function uiEnroll() {
+            document.getElementById('portal-title').innerText = "Enrollment";
             document.getElementById('portal-content').innerHTML = `
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div class="glass space-y-4">
-                        <input id="f-lin" placeholder="Student LIN" value="${targetLin}" class="w-full">
-                        <input id="f-amt" placeholder="Amount (Subtract)" type="number" class="w-full">
-                        <button onclick="payFees()" class="btn-primary w-full">Apply Transaction</button>
-                    </div>
-                    <div class="glass h-80 overflow-y-auto" id="fee-list"></div>
-                </div>`;
-            loadFeeLedger();
-        }
-
-        async function loadFeeLedger() {
-            const snap = await db.collection("users").where("role", "==", "learner").get();
-            let h = `<table class="w-full text-xs"><thead><tr class="text-left border-b"><th>Name</th><th class="text-right">Balance</th></tr></thead><tbody>`;
-            snap.forEach(d => {
-                h += `<tr class="border-b"><td class="py-2">${d.data().name}</td><td class="py-2 text-right font-black text-red-600">UGX ${d.data().balance.toLocaleString()}</td></tr>`;
-            });
-            document.getElementById('fee-list').innerHTML = h + "</tbody></table>";
-        }
-
-        async function payFees() {
-            const id = document.getElementById('f-lin').value.toLowerCase();
-            const amt = parseFloat(document.getElementById('f-amt').value) || 0;
-            const ref = db.collection("users").doc(id);
-            const doc = await ref.get();
-            if(doc.exists) {
-                const nb = (doc.data().balance || 0) - amt;
-                await ref.update({ balance: nb });
-                alert("Updated. New: UGX " + nb.toLocaleString());
-                loadFeeLedger();
-            }
-        }
-
-        function showDash() {
-            document.getElementById('portal-title').innerText = "Welcome back";
-            document.getElementById('portal-content').innerHTML = `
-                <div class="p-16 bg-blue-600 rounded-[3rem] text-white shadow-xl">
-                    <h2 class="text-5xl font-extrabold italic">${me.name}</h2>
-                    <p class="mt-4 font-bold opacity-80 uppercase tracking-widest text-xs">Awere SS Management Portal Active</p>
-                </div>`;
-        }
-
-        // Enroll function (Restored v18 logic)
-        function uiEnroll() {
-            document.getElementById('portal-title').innerText = "Registration";
-            document.getElementById('portal-content').innerHTML = `
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div class="glass space-y-3">
-                        <h4 class="font-black text-xs uppercase text-blue-600 mb-2">Learner Enrollment</h4>
-                        <input id="el-lin" placeholder="LIN">
-                        <input id="el-name" placeholder="Name">
-                        <select id="el-class" class="w-full">${CLASSES.map(c=>`<option>${c}</option>`).join('')}</select>
+                        <h4 class="text-[10px] font-black uppercase text-blue-600">Enroll Learner (1234)</h4>
+                        <input id="el-lin" placeholder="LIN"><input id="el-name" placeholder="Name">
+                        <select id="el-class">${CLASSES.map(c=>`<option>${c}</option>`).join('')}</select>
                         <button onclick="saveU('learner')" class="btn-primary w-full">Enroll Student</button>
                     </div>
-                    <div class="glass space-y-3">
-                        <h4 class="font-black text-xs uppercase text-purple-600 mb-2">Staff Assignment</h4>
-                        <input id="es-id" placeholder="Staff ID">
-                        <input id="es-name" placeholder="Name">
-                        <select id="es-role" class="w-full"><option>teacher</option><option>dos</option><option>bursar</option></select>
-                        <div class="flex gap-2">
-                            <select id="es-class" class="w-1/2">${CLASSES.map(c=>`<option>${c}</option>`).join('')}</select>
-                            <select id="es-sub" class="w-1/2">${SUB_O.concat(SUB_A).map(s=>`<option>${s}</option>`).join('')}</select>
-                        </div>
-                        <button onclick="saveU('staff')" class="w-full bg-purple-600 text-white p-3 rounded-xl font-bold">Assign Load</button>
+                    <div class="glass space-y-4">
+                        <h4 class="text-[10px] font-black uppercase text-purple-600">Register Staff (0000)</h4>
+                        <input id="es-id" placeholder="Staff ID"><input id="es-name" placeholder="Name">
+                        <select id="es-role"><option>teacher</option><option>dos</option><option>deputy</option><option>headteacher</option><option>bursar</option></select>
+                        <div class="flex gap-2"><select id="es-class">${CLASSES.map(c=>`<option>${c}</option>`).join('')}</select>
+                        <select id="es-sub">${SUB_O.concat(SUB_A).map(s=>`<option>${s}</option>`).join('')}</select></div>
+                        <button onclick="saveU('staff')" class="btn-primary bg-purple-600 w-full">Save Staff Member</button>
                     </div>
                 </div>`;
         }
 
         async function saveU(type) {
-            const id = type === 'learner' ? document.getElementById('el-lin').value.toLowerCase() : document.getElementById('es-id').value.toLowerCase();
+            const isL = (type === 'learner');
+            const id = isL ? document.getElementById('el-lin').value.toLowerCase() : document.getElementById('es-id').value.toLowerCase();
+            const pin = isL ? "1234" : "0000";
             const doc = await db.collection("users").doc(id).get();
-            let data = doc.exists ? doc.data() : { password: '1234', balance: 0 };
-            if(type === 'learner') { data = { ...data, name: document.getElementById('el-name').value, class: document.getElementById('el-class').value, role: 'learner' }; }
+            let data = doc.exists ? doc.data() : { password: pin, balance: 0, mySubjects: [], assignments: [] };
+            if(isL) { data = { ...data, name: document.getElementById('el-name').value, class: document.getElementById('el-class').value, role: 'learner' }; }
             else { 
-                let load = data.assignments || []; 
-                load.push({ class: document.getElementById('es-class').value, subject: document.getElementById('es-sub').value });
-                data = { ...data, name: document.getElementById('es-name').value, role: document.getElementById('es-role').value, assignments: load };
+                data.assignments.push({ class: document.getElementById('es-class').value, subject: document.getElementById('es-sub').value });
+                data = { ...data, name: document.getElementById('es-name').value, role: document.getElementById('es-role').value };
             }
             await db.collection("users").doc(id).set(data);
-            alert("Stored.");
+            alert("Record Saved.");
         }
     </script>
 </body>
