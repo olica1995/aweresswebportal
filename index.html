@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Awere SS | Academic Management System (Super-Teacher Mode)</title>
+    <title>Awere SS | Ultimate Academic Management System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -13,141 +13,287 @@
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
         @media print { .no-print { display: none; } .print-only { display: block !important; } }
         .print-only { display: none; }
-        .stamp-effect { transform: rotate(-10deg); opacity: 0.6; filter: contrast(1.5) hue-rotate(-20deg); }
+        .stamp-effect { transform: rotate(-12deg); opacity: 0.5; filter: contrast(1.2) sepia(1); }
+        .student-photo { width: 100px; height: 100px; border: 2px solid #000; object-fit: cover; }
     </style>
 </head>
-<body class="bg-slate-50">
+<body class="bg-slate-50 text-slate-900">
 
-    <div id="portal-view" class="flex min-h-screen flex-col md:flex-row no-print">
+    <div id="login-view" class="flex items-center justify-center min-h-screen p-6 bg-slate-900 no-print">
+        <div class="bg-white p-10 rounded-[3rem] shadow-2xl w-full max-w-md border-t-8 border-blue-600 text-center">
+            <img src="https://via.placeholder.com/150?text=AWERE+BADGE" class="mx-auto mb-4 w-24 h-24">
+            <h1 class="text-2xl font-black uppercase">Awere Secondary School</h1>
+            <p class="text-blue-600 text-[10px] font-bold mb-8 uppercase tracking-widest italic">Complete ERP System</p>
+            <input type="text" id="u-id" placeholder="LIN / Staff ID" class="w-full p-4 bg-slate-100 rounded-xl mb-3 outline-none border focus:border-blue-600">
+            <input type="password" id="u-pw" placeholder="Security PIN" class="w-full p-4 bg-slate-100 rounded-xl mb-6 outline-none border focus:border-blue-600">
+            <button onclick="handleLogin()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-bold shadow-lg hover:bg-blue-700 transition">ACCESS SYSTEM</button>
+        </div>
+    </div>
+
+    <div id="portal-view" class="hidden flex min-h-screen flex-col md:flex-row no-print">
         <aside class="w-full md:w-72 bg-slate-950 text-slate-400 p-8 flex flex-col shadow-2xl">
-            <h2 class="text-white font-black text-xl mb-10 italic">AWERE SS</h2>
-            <nav id="sidebar-nav" class="flex-1 space-y-2 font-semibold text-sm">
-                </nav>
+            <div id="sidebar-photo" class="flex justify-center mb-6"></div>
+            <h2 class="text-white font-black text-xl mb-10 italic text-center underline decoration-blue-500">AWERE AMS</h2>
+            <nav id="sidebar-nav" class="flex-1 space-y-2 font-semibold text-sm"></nav>
             <div class="pt-6 border-t border-slate-800">
-                <p id="user-display" class="text-white font-bold truncate">Olica</p>
-                <p class="text-[9px] text-purple-500 font-black uppercase tracking-tighter">Developer & Teacher</p>
+                <p id="user-display" class="text-white font-bold truncate"></p>
+                <p id="role-display" class="text-[10px] text-blue-500 font-black uppercase mb-4"></p>
+                <button onclick="location.reload()" class="text-xs text-red-500 font-bold uppercase hover:underline">Log Out</button>
             </div>
         </aside>
 
-        <main class="flex-1 p-6 md:p-12">
-            <h2 id="portal-title" class="text-3xl font-black mb-8 italic uppercase">Control Center</h2>
-            <div id="portal-content" class="bg-white p-6 md:p-10 rounded-[3rem] shadow-sm border min-h-[70vh]">
-                </div>
+        <main class="flex-1 p-6 md:p-12 overflow-y-auto">
+            <h2 id="portal-title" class="text-3xl md:text-5xl font-black mb-8 tracking-tight italic uppercase">Dashboard</h2>
+            <div id="portal-content" class="bg-white p-8 md:p-10 rounded-[3rem] shadow-sm border min-h-[70vh]"></div>
         </main>
     </div>
 
-    <div id="report-card-print" class="print-only bg-white p-12 text-black w-full max-w-5xl mx-auto border-4 border-black">
-        <div class="flex justify-between items-center border-b-4 border-blue-600 pb-4 mb-6">
-            <img src="https://via.placeholder.com/120?text=BADGE" class="w-20">
+    <div id="report-card-print" class="print-only bg-white p-10 text-black w-full max-w-5xl mx-auto border-[6px] border-double border-black relative">
+        <div class="flex justify-between items-center border-b-4 border-blue-600 pb-4 mb-4">
+            <img src="https://via.placeholder.com/120?text=BADGE" class="w-24">
             <div class="text-center">
-                <h1 class="text-2xl font-black uppercase">Awere Secondary School</h1>
-                <p class="text-[10px] font-bold">P.O. BOX 1234, GULU | ACADEMIC REPORT</p>
+                <h1 class="text-3xl font-black uppercase">Awere Secondary School</h1>
+                <p class="text-[10px] font-bold">"Excellence in Service" | P.O. BOX 1234, Gulu</p>
+                <h2 id="report-mode-text" class="mt-2 text-md font-black bg-black text-white px-6 py-1 inline-block uppercase italic">Report Card</h2>
             </div>
-            <div id="report-qr" class="w-20 h-20"></div>
+            <div id="report-qr" class="w-24 h-24"></div>
         </div>
 
-        <div class="grid grid-cols-2 gap-8 mb-6 text-[12px] font-bold uppercase border p-4 rounded-xl">
-            <div class="space-y-1">
-                <p>NAME: <span id="r-name" class="font-black"></span></p>
-                <p>LIN: <span id="r-lin" class="font-black"></span></p>
-                <p>DOB: <span id="r-dob" class="font-black text-blue-600"></span></p>
-            </div>
-            <div class="space-y-1 text-right">
-                <p>CLASS: <span id="r-class" class="font-black"></span></p>
-                <p>TERM: 1 | YEAR: 2026</p>
-                <div id="r-photo-area" class="inline-block mt-2"></div>
-            </div>
+        <div class="flex justify-between items-start mb-6 border-b-2 border-slate-200 pb-4">
+            <div id="report-learner-info" class="text-[12px] font-bold uppercase space-y-1"></div>
+            <div id="report-photo-area"></div>
         </div>
 
         <table class="w-full border-2 border-black text-[11px] mb-6">
-            <thead class="bg-slate-50 uppercase">
+            <thead class="bg-slate-100 uppercase font-black">
                 <tr>
                     <th class="border border-black p-2 text-left">Subject</th>
                     <th class="border border-black p-2">AoI (20)</th>
                     <th class="border border-black p-2">Exam (80)</th>
                     <th class="border border-black p-2">Total</th>
-                    <th class="border border-black p-2">Subject Teacher</th>
+                    <th class="border border-black p-2">Teacher</th>
                 </tr>
             </thead>
-            <tbody id="r-table-body"></tbody>
+            <tbody id="report-table-body"></tbody>
         </table>
 
-        <div class="grid grid-cols-2 gap-4 text-xs font-bold border-t pt-4">
-            <div>
-                <p class="underline">CLASS TEACHER'S COMMENT:</p>
-                <p id="r-teacher-msg" class="italic mt-2">Satisfactory progress made this term.</p>
+        <div class="grid grid-cols-2 gap-8 text-[12px] font-bold border-t-2 border-black pt-4">
+            <div class="space-y-2">
+                <p class="underline decoration-blue-600">ACADEMIC SUMMARY:</p>
+                <p>CLASS POSITION: <span id="report-rank" class="font-black italic text-lg text-blue-700">...</span></p>
+                <p>AVERAGE SCORE: <span id="report-avg" class="font-black italic text-lg">...</span></p>
+                <p class="mt-4 underline">CLASS TEACHER'S REMARKS:</p>
+                <p id="teacher-remark" class="italic font-medium text-slate-700">...</p>
             </div>
-            <div class="relative">
-                <p class="underline">HEADTEACHER'S COMMENT:</p>
-                <p id="r-ht-msg" class="italic mt-2">...</p>
-                <img src="https://via.placeholder.com/150?text=STAMP" class="w-20 h-20 absolute right-0 -bottom-4 stamp-effect">
+            <div class="relative p-4 bg-slate-50 border-2 border-dashed border-slate-300 rounded-2xl">
+                <p class="underline">HEADTEACHER'S REMARKS:</p>
+                <p id="report-ht-comment" class="italic mt-2 text-slate-800">...</p>
+                <img src="https://via.placeholder.com/150?text=STAMP" class="w-24 h-24 absolute right-2 bottom-2 stamp-effect">
             </div>
         </div>
     </div>
 
     <script>
-        const db = firebase.firestore();
-        let me = { role: 'dev', name: 'Olica', subject: 'Computer Studies' }; // Dev login bypass
+        const PHOTO_REPO = "https://yourusername.github.io/your-repo/photos/";
+        const CLASSES = ["S1", "S2", "S3", "S4", "S5", "S6"];
+        const SUBJECTS = ["Mathematics", "English", "Physics", "Chemistry", "Biology", "Geography", "History", "CRE", "Commerce", "Agriculture", "Computer Studies"];
 
-        // --- NEW STAFF & LEARNER REGISTRATION ---
-        function uiRegister() {
-            document.getElementById('portal-title').innerText = "System Enrollment";
+        // Firebase Config (Keep your credentials here)
+        const firebaseConfig = {
+            apiKey: "AIzaSyDUoYRjlHxBg3-ddFtsk2tGXAn9X46moHc",
+            authDomain: "awere-erp.firebaseapp.com",
+            projectId: "awere-erp",
+            storageBucket: "awere-erp.firebasestorage.app",
+            messagingSenderId: "139972783523",
+            appId: "1:139972783523:web:f9591d033305bfabbe7e16"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        let me = null;
+
+        async function handleLogin() {
+            const id = document.getElementById('u-id').value.trim().toLowerCase();
+            const pw = document.getElementById('u-pw').value.trim();
+            if (id === "admin" && pw === "1995") { me = { name: "Olica", role: "dev", id: "admin" }; launch(); return; }
+            const doc = await db.collection("users").doc(id).get();
+            if (doc.exists && doc.data().password == pw) { me = { ...doc.data(), id }; launch(); }
+            else alert("❌ Access Denied");
+        }
+
+        function launch() {
+            document.getElementById('login-view').classList.add('hidden');
+            document.getElementById('portal-view').classList.remove('hidden');
+            document.getElementById('user-display').innerText = me.name;
+            document.getElementById('role-display').innerText = me.role;
+            if(me.role === 'learner') {
+                document.getElementById('sidebar-photo').innerHTML = `<img src="${PHOTO_REPO}${me.id}.jpg" onerror="this.src='https://via.placeholder.com/60?text=👤'" class="w-16 h-16 rounded-full border-2 border-blue-500 object-cover">`;
+            }
+            buildNav();
+            showDash();
+        }
+
+        function buildNav() {
+            const nav = document.getElementById('sidebar-nav');
+            const r = me.role;
+            let h = `<button onclick="showDash()" class="w-full text-left p-4 rounded-xl hover:bg-slate-800 transition">🏠 Dashboard</button>`;
+            
+            if (['dev', 'admin', 'deputy'].includes(r)) {
+                h += `<button onclick="uiEnrollment()" class="w-full text-left p-4 rounded-xl hover:bg-blue-600 hover:text-white transition">🛡️ Enroll Staff/Learners</button>`;
+                h += `<button onclick="uiAdminControls()" class="w-full text-left p-4 rounded-xl hover:bg-blue-600 hover:text-white transition italic">⚙️ System Controls</button>`;
+            }
+            if (['dev', 'admin', 'teacher'].includes(r)) {
+                h += `<button onclick="uiAcademics()" class="w-full text-left p-4 rounded-xl hover:bg-green-600 hover:text-white transition font-bold">📝 Mark Entry (Edit)</button>`;
+            }
+            if (['dev', 'admin', 'bursar'].includes(r)) {
+                h += `<button onclick="uiFees()" class="w-full text-left p-4 rounded-xl hover:bg-amber-600 hover:text-white transition font-bold">💰 Fees Ledger</button>`;
+            }
+            h += `<button onclick="uiReportHub()" class="w-full text-left p-4 rounded-xl hover:bg-purple-600 hover:text-white transition">📄 Academic Reports</button>`;
+            nav.innerHTML = h;
+        }
+
+        // --- ENROLLMENT (EVERY DETAIL INCLUDED) ---
+        function uiEnrollment() {
+            document.getElementById('portal-title').innerText = "Enrollment Hub";
             document.getElementById('portal-content').innerHTML = `
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
-                    <div class="bg-slate-50 p-6 rounded-3xl border">
-                        <h3 class="font-black text-blue-600 mb-4 uppercase">Register New Learner</h3>
-                        <input id="l-name" placeholder="Full Name" class="w-full p-3 mb-2 border rounded-xl">
-                        <input id="l-lin" placeholder="LIN Number" class="w-full p-3 mb-2 border rounded-xl">
-                        <input id="l-dob" type="date" class="w-full p-3 mb-2 border rounded-xl">
-                        <select id="l-class" class="w-full p-3 mb-4 border rounded-xl"><option>S1</option><option>S2</option><option>S3</option><option>S4</option><option>S5</option><option>S6</option></select>
-                        <button onclick="saveLearner()" class="w-full bg-blue-600 text-white p-4 rounded-xl font-bold uppercase">Enroll Learner</button>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="bg-slate-50 p-6 rounded-3xl border space-y-3">
+                        <h3 class="font-black uppercase text-blue-600 italic">Add New Learner</h3>
+                        <input id="l-lin" placeholder="LIN Number" class="w-full p-3 border rounded-xl">
+                        <input id="l-name" placeholder="Full Name" class="w-full p-3 border rounded-xl">
+                        <input id="l-dob" type="date" class="w-full p-3 border rounded-xl">
+                        <select id="l-gender" class="w-full p-3 border rounded-xl"><option>Male</option><option>Female</option></select>
+                        <select id="l-class" class="w-full p-3 border rounded-xl">${CLASSES.map(c => `<option>${c}</option>`).join('')}</select>
+                        <button onclick="saveUser('learner')" class="w-full bg-blue-600 text-white p-4 rounded-xl font-black uppercase">Register Learner</button>
                     </div>
-                    <div class="bg-slate-50 p-6 rounded-3xl border">
-                        <h3 class="font-black text-purple-600 mb-4 uppercase">Register Staff (Teacher/Bursar)</h3>
-                        <input id="s-name" placeholder="Full Name" class="w-full p-3 mb-2 border rounded-xl">
-                        <select id="s-role" class="w-full p-3 mb-2 border rounded-xl"><option>teacher</option><option>bursar</option><option>deputy</option></select>
-                        <input id="s-sub" placeholder="Subject (If Teacher)" class="w-full p-3 mb-2 border rounded-xl">
-                        <button onclick="saveStaff()" class="w-full bg-purple-600 text-white p-4 rounded-xl font-bold uppercase">Enroll Staff</button>
+                    <div class="bg-slate-50 p-6 rounded-3xl border space-y-3">
+                        <h3 class="font-black uppercase text-purple-600 italic">Add New Staff</h3>
+                        <input id="s-name" placeholder="Full Name" class="w-full p-3 border rounded-xl">
+                        <select id="s-gender" class="w-full p-3 border rounded-xl"><option>Male</option><option>Female</option></select>
+                        <select id="s-role" class="w-full p-3 border rounded-xl"><option>teacher</option><option>bursar</option><option>deputy</option><option>headteacher</option></select>
+                        <input id="s-sub" placeholder="Subject (If Teacher)" class="w-full p-3 border rounded-xl">
+                        <select id="s-class" class="w-full p-3 border rounded-xl"><option>None/All</option>${CLASSES.map(c => `<option>${c}</option>`).join('')}</select>
+                        <button onclick="saveUser('staff')" class="w-full bg-purple-600 text-white p-4 rounded-xl font-black uppercase">Register Staff</button>
                     </div>
                 </div>`;
         }
 
-        async function saveLearner() {
-            const lin = document.getElementById('l-lin').value.toLowerCase();
-            const data = {
+        async function saveUser(type) {
+            const id = type === 'learner' ? document.getElementById('l-lin').value.toLowerCase() : "staff_" + Math.floor(1000+Math.random()*9000);
+            const pw = Math.floor(1000+Math.random()*9000).toString();
+            const data = type === 'learner' ? {
                 name: document.getElementById('l-name').value,
                 dob: document.getElementById('l-dob').value,
+                gender: document.getElementById('l-gender').value,
                 class: document.getElementById('l-class').value,
                 role: 'learner', balance: 0, password: '1234'
+            } : {
+                name: document.getElementById('s-name').value,
+                gender: document.getElementById('s-gender').value,
+                role: document.getElementById('s-role').value,
+                subject: document.getElementById('s-sub').value,
+                class: document.getElementById('s-class').value,
+                password: pw
             };
-            await db.collection("users").doc(lin).set(data);
-            alert("✅ Learner " + data.name + " enrolled successfully!");
+            await db.collection("users").doc(id).set(data);
+            alert(`✅ Success!\nID: ${id}\nPassword: ${data.password}`);
         }
 
-        // --- REPORT GENERATION LOGIC ---
-        async function printReport(lin) {
+        // --- ACADEMICS (MARK ENTRY & EDIT) ---
+        function uiAcademics() {
+            document.getElementById('portal-title').innerText = "Mark Entry";
+            document.getElementById('portal-content').innerHTML = `
+                <div class="max-w-md space-y-4">
+                    <input id="m-lin" placeholder="Learner LIN" class="w-full p-4 border rounded-xl">
+                    <select id="m-sub" class="w-full p-4 border rounded-xl">${SUBJECTS.map(s => `<option>${s}</option>`).join('')}</select>
+                    <div class="flex gap-2">
+                        <input id="m-aoi" type="number" step="0.1" placeholder="AoI (3.0)" class="w-1/2 p-4 border rounded-xl">
+                        <input id="m-exam" type="number" placeholder="Exam (100)" class="w-1/2 p-4 border rounded-xl">
+                    </div>
+                    <button onclick="saveMarks()" class="w-full bg-green-600 text-white p-4 rounded-xl font-bold uppercase">Save / Edit Marks</button>
+                </div>`;
+        }
+
+        async function saveMarks() {
+            const lin = document.getElementById('m-lin').value.toLowerCase();
+            const aoi = parseFloat(document.getElementById('m-aoi').value);
+            const exam = parseFloat(document.getElementById('m-exam').value);
+            const sub = document.getElementById('m-sub').value;
+            const total = ((aoi/3)*20) + (exam*0.8);
+            await db.collection("marks").doc(`${lin}_${sub}`).set({
+                student: lin, subject: sub, aoi, exam, total: total.toFixed(1), teacher: me.name
+            });
+            alert("🎯 Marks Synchronized!");
+        }
+
+        // --- BURSAR: INSTALLMENT LEDGER ---
+        function uiFees() {
+            document.getElementById('portal-title').innerText = "Fees Management";
+            document.getElementById('portal-content').innerHTML = `
+                <div class="max-w-md space-y-4">
+                    <input id="f-lin" placeholder="Learner LIN" class="w-full p-4 border rounded-xl">
+                    <input id="f-pay" type="number" placeholder="Payment Amount" class="w-full p-4 border rounded-xl">
+                    <button onclick="postFee()" class="w-full bg-amber-600 text-white p-4 rounded-xl font-bold uppercase">Record Payment</button>
+                </div>`;
+        }
+
+        async function postFee() {
+            const lin = document.getElementById('f-lin').value.toLowerCase();
+            const pay = parseFloat(document.getElementById('f-pay').value);
+            const ref = db.collection("users").doc(lin);
+            const doc = await ref.get();
+            const newBal = (doc.data().balance || 0) - pay;
+            await ref.update({ balance: newBal });
+            alert("💰 New Balance: UGX " + newBal.toLocaleString());
+        }
+
+        // --- REPORT GENERATION (RANKING, PHOTO, DOB, QR) ---
+        async function uiReportHub() {
+            document.getElementById('portal-title').innerText = "Report Hub";
+            document.getElementById('portal-content').innerHTML = `
+                <div class="text-center p-10"><input id="r-lin" placeholder="Learner LIN" class="p-4 border rounded-xl mb-4 text-center w-64">
+                <br><button onclick="prepareReport()" class="bg-purple-600 text-white px-10 py-5 rounded-full font-black uppercase shadow-xl">Generate Full Report</button></div>`;
+        }
+
+        async function prepareReport() {
+            const lin = document.getElementById('r-lin').value.toLowerCase();
             const uDoc = await db.collection("users").doc(lin).get();
+            if (!uDoc.exists) return alert("Learner not found!");
             const u = uDoc.data();
+            if (u.balance > 0 && me.role === 'learner') return alert("❌ BLOCKED: Clear balance to view.");
+
+            const mSnap = await db.collection("marks").where("student", "==", lin).get();
+            let table = ""; let total = 0; let count = 0;
+            mSnap.forEach(d => {
+                const data = d.data();
+                table += `<tr><td class="border border-black p-2 font-black">${data.subject}</td><td class="border border-black p-2 text-center">${data.aoi}</td><td class="border border-black p-2 text-center">${data.exam}</td><td class="border border-black p-2 text-center font-black">${data.total}%</td><td class="border border-black p-2 italic">${data.teacher}</td></tr>`;
+                total += parseFloat(data.total); count++;
+            });
+
+            const avg = (total/count).toFixed(1);
+            document.getElementById('report-learner-info').innerHTML = `<p>NAME: ${u.name}</p><p>LIN: ${lin.toUpperCase()}</p><p>DOB: ${u.dob}</p><p>CLASS: ${u.class} | GENDER: ${u.gender}</p>`;
+            document.getElementById('report-photo-area').innerHTML = `<img src="${PHOTO_REPO}${lin}.jpg" onerror="this.src='https://via.placeholder.com/100?text=PHOTO'" class="student-photo">`;
+            document.getElementById('report-table-body').innerHTML = table;
+            document.getElementById('report-avg').innerText = avg + "%";
+            document.getElementById('report-rank').innerText = "N/A"; // Requires whole class loop for real ranking
+            document.getElementById('report-ht-comment').innerText = avg > 70 ? "Exceptional performance. Keep up the high standard." : avg > 50 ? "A good effort. More focus needed in technical subjects." : "Below average. Intensive remedial lessons recommended.";
             
-            document.getElementById('r-name').innerText = u.name;
-            document.getElementById('r-lin').innerText = lin.toUpperCase();
-            document.getElementById('r-dob').innerText = u.dob; // ADDED DOB
-            document.getElementById('r-class').innerText = u.class;
-            
-            // Generate QR & Load Marks... (logic as before)
-            window.print();
+            document.getElementById('report-qr').innerHTML = "";
+            new QRCode(document.getElementById("report-qr"), { text: "AWERE_VERIFIED_" + lin, width: 90, height: 90 });
+            setTimeout(() => window.print(), 500);
         }
 
-        // Initial Nav Build
-        function buildNav() {
-            const nav = document.getElementById('sidebar-nav');
-            nav.innerHTML = `
-                <button onclick="uiRegister()" class="w-full text-left p-4 rounded-xl hover:bg-white hover:text-black">👤 Enrollment</button>
-                <button onclick="uiAcademics()" class="w-full text-left p-4 rounded-xl hover:bg-white hover:text-black">📝 Mark Entry</button>
-                <button onclick="uiFees()" class="w-full text-left p-4 rounded-xl hover:bg-white hover:text-black">💰 Fees Hub</button>
-            `;
+        function uiAdminControls() {
+            document.getElementById('portal-title').innerText = "System Settings";
+            document.getElementById('portal-content').innerHTML = `<div class="p-10 bg-slate-50 border-2 border-dashed rounded-3xl text-center"><p class="font-bold">System Mode: ACTIVE</p><p class="text-xs italic text-slate-500">Only Developer (Olica) can modify core logic.</p></div>`;
         }
-        buildNav();
+
+        function showDash() {
+            document.getElementById('portal-title').innerText = "Awere SS Portal";
+            document.getElementById('portal-content').innerHTML = `<div class="bg-blue-600 p-12 rounded-[3rem] text-white shadow-2xl">
+                <h2 class="text-4xl font-black italic">Welcome, ${me.name}!</h2>
+                <p class="uppercase text-[10px] tracking-widest mt-4 font-bold opacity-80">Access Granted: ${me.role}</p>
+            </div>`;
+        }
     </script>
 </body>
 </html>
