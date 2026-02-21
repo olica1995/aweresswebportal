@@ -18,11 +18,12 @@
         .glass { background: white; border: 1px solid #e2e8f0; border-radius: 24px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
         .btn-primary { @apply bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700 active:scale-95 transition-all shadow-lg shadow-blue-100; }
         .btn-purple { @apply bg-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-purple-700 active:scale-95 transition-all; }
-        input, select { @apply bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 text-sm w-full mb-3; }
+        input, select, textarea { @apply bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 text-sm w-full mb-3; }
         .sidebar-item { @apply w-full text-left p-3 font-bold text-sm rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all flex items-center gap-3 mb-1; }
         .subject-tag { @apply inline-flex items-center gap-2 bg-slate-100 px-3 py-1 rounded-lg text-[10px] font-bold mb-1 mr-1 border border-slate-200; }
         #qr-buffer { display: none; }
         .m-input { @apply w-20 bg-white border border-slate-200 rounded-lg px-2 py-1 text-center font-bold focus:ring-2 focus:ring-blue-500; }
+        .c-input { @apply w-full bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs focus:ring-2 focus:ring-blue-500; }
     </style>
 </head>
 <body>
@@ -107,190 +108,112 @@
             document.getElementById('user-display').innerText = me.name;
             document.getElementById('role-display').innerText = me.role;
             renderNav();
-            me.role === 'learner' ? uiLearnerProfile() : uiDashboard();
+            uiHome();
         }
 
         function renderNav() {
             const nav = document.getElementById('sidebar-nav');
             const isAdmin = ['dev', 'headteacher', 'dos'].includes(me.role);
-            let h = `<button onclick="${me.role === 'learner' ? 'uiLearnerProfile()' : 'uiDashboard()'}" class="sidebar-item">🏠 Home</button>`;
+            const isFinance = ['dev', 'bursar'].includes(me.role);
+            const isTeacher = ['dev', 'teacher'].includes(me.role);
+
+            let h = `<button onclick="uiHome()" class="sidebar-item">🏠 Home</button>`;
             if (isAdmin) {
                 h += `<button onclick="uiEnrollment()" class="sidebar-item">👤 Registration</button>`;
                 h += `<button onclick="uiRegistry()" class="sidebar-item">🔍 Registry</button>`;
                 h += `<button onclick="uiSettings()" class="sidebar-item">⚙️ Settings</button>`;
             }
-            if (['dev', 'teacher'].includes(me.role)) h += `<button onclick="uiMarks()" class="sidebar-item">📝 Enter Marks</button>`;
-            h += `<button onclick="uiBursar()" class="sidebar-item">💰 Financials</button>`;
+            if (isTeacher) h += `<button onclick="uiMarks()" class="sidebar-item">📝 Enter Marks</button>`;
+            if (isFinance) h += `<button onclick="uiBursar()" class="sidebar-item">💰 Financials</button>`;
+            
             h += `<button onclick="uiReports()" class="sidebar-item">📄 Report Hub</button>`;
             nav.innerHTML = h;
         }
 
-        function uiDashboard() {
+        function uiHome() {
             document.getElementById('portal-title').innerText = "Dashboard";
+            let roleInfo = "";
+            
+            if(me.role === 'learner') {
+                const age = me.dob ? (2026 - new Date(me.dob).getFullYear()) : "N/A";
+                roleInfo = `
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                        <div class="glass bg-slate-900 text-white">
+                            <p class="text-[10px] uppercase font-bold opacity-50">Fees Balance</p>
+                            <h2 class="text-3xl font-black">UGX ${(me.balance || 0).toLocaleString()}</h2>
+                        </div>
+                        <div class="glass">
+                            <p class="text-[10px] uppercase font-bold text-slate-400">Class & Bio</p>
+                            <p class="font-bold text-lg">${me.class} • ${age} Years</p>
+                        </div>
+                    </div>`;
+            } else if(me.role === 'teacher') {
+                roleInfo = `
+                    <div class="glass mt-6">
+                        <p class="text-[10px] uppercase font-bold text-blue-600 mb-3">Assigned Classes & Subjects</p>
+                        <div class="flex flex-wrap gap-2">
+                            ${(me.assignments || []).map(a => `<span class="px-3 py-1 bg-blue-50 text-blue-700 rounded-lg text-xs font-bold">${a.class}: ${a.subject}</span>`).join('')}
+                        </div>
+                    </div>`;
+            }
+
             document.getElementById('portal-content').innerHTML = `
                 <div class="p-12 bg-blue-700 rounded-[3rem] text-white">
                     <h2 class="text-4xl font-black italic">${me.name}</h2>
-                    <p class="text-[10px] uppercase font-bold opacity-60 tracking-widest mt-2">${me.role} Portal</p>
-                </div>`;
-        }
-
-        // --- 📝 MARK ENTRY SYSTEM ---
-        async function uiMarks() {
-            document.getElementById('portal-title').innerText = "Enter Marks";
-            document.getElementById('portal-content').innerHTML = `
-                <div class="glass flex flex-col md:flex-row gap-4 mb-6">
-                    <select id="m-class" class="mb-0">${CLASSES.map(c=>`<option>${c}</option>`).join('')}</select>
-                    <select id="m-sub" class="mb-0">${SUBJECTS.map(s=>`<option>${s}</option>`).join('')}</select>
-                    <button onclick="loadMarkSheet()" class="btn-primary py-2 px-10">Load Sheet</button>
+                    <p class="text-[10px] uppercase font-bold opacity-60 tracking-widest mt-2">${me.role} Access Profile</p>
                 </div>
-                <div id="marks-sheet" class="glass hidden overflow-x-auto"></div>`;
+                ${roleInfo}`;
         }
 
-        async function loadMarkSheet() {
-            const cls = document.getElementById('m-class').value;
-            const sub = document.getElementById('m-sub').value;
-            const sheet = document.getElementById('marks-sheet');
-            
-            const snap = await db.collection("users")
-                .where("role", "==", "learner")
-                .where("class", "==", cls)
-                .where("subjects", "array-contains", sub).get();
-
-            if(snap.empty) { alert("No students found for this selection."); return; }
-
-            let h = `<table class="w-full text-left text-sm">
-                <thead class="bg-slate-50 border-b"><tr><th class="p-4">Learner Name</th><th class="p-4">Score (0-100)</th></tr></thead><tbody>`;
-            
-            snap.forEach(doc => {
-                h += `<tr class="border-b">
-                    <td class="p-4 font-bold text-slate-700">${doc.data().name}</td>
-                    <td class="p-4"><input type="number" class="m-input" data-id="${doc.id}" placeholder="--"></td>
-                </tr>`;
-            });
-
-            h += `</tbody></table><button onclick="saveMarks('${cls}', '${sub}')" class="btn-primary w-full mt-6">Upload Marks to Cloud</button>`;
-            sheet.innerHTML = h;
-            sheet.classList.remove('hidden');
-        }
-
-        async function saveMarks(cls, sub) {
-            const inputs = document.querySelectorAll('.m-input');
-            const batch = db.batch();
-
-            inputs.forEach(input => {
-                const studentId = input.getAttribute('data-id');
-                const score = input.value;
-                if(score !== "") {
-                    const markRef = db.collection("marks").doc(`${studentId}_${config.year}_${config.term}_${sub}`);
-                    batch.set(markRef, {
-                        studentId, class: cls, subject: sub, 
-                        score: parseFloat(score), year: config.year, term: config.term,
-                        teacher: me.name
-                    });
-                }
-            });
-
-            await batch.commit();
-            alert("Marks synchronized successfully.");
-        }
-
-        // --- 📄 REPORT HUB (WITH DATA FETCHING) ---
-        function uiReports() {
-            document.getElementById('portal-title').innerText = "Report Hub";
-            document.getElementById('portal-content').innerHTML = `
-                <div class="glass max-w-md mx-auto text-center space-y-4">
-                    <h4 class="text-[10px] font-black uppercase text-blue-600">Generate Academic Report</h4>
-                    <input id="r-lin" placeholder="Student LIN">
-                    <button onclick="printReport()" class="btn-primary w-full">Download PDF</button>
-                </div>`;
-        }
-
-        async function printReport() {
-            const id = document.getElementById('r-lin').value.toLowerCase().trim();
-            const doc = await db.collection("users").doc(id).get();
-            if(!doc.exists) return alert("Student not found.");
-            const u = doc.data();
-            
-            if(u.balance > 0) return alert(`Financial Lock: UGX ${u.balance.toLocaleString()} unpaid.`);
-
-            // Fetch Marks
-            const marksSnap = await db.collection("marks")
-                .where("studentId", "==", id)
-                .where("year", "==", config.year)
-                .where("term", "==", config.term).get();
-
-            const markData = [];
-            marksSnap.forEach(m => {
-                const d = m.data();
-                let g = d.score >= 80 ? 'D1' : d.score >= 75 ? 'D2' : d.score >= 66 ? 'C3' : d.score >= 60 ? 'C4' : d.score >= 55 ? 'C5' : d.score >= 50 ? 'C6' : d.score >= 45 ? 'P7' : d.score >= 35 ? 'P8' : 'F9';
-                markData.push([d.subject, d.score, g, d.teacher]);
-            });
-
-            const { jsPDF } = window.jspdf;
-            const pdf = new jsPDF();
-            
-            const qb = document.getElementById("qr-buffer");
-            qb.innerHTML = "";
-            new QRCode(qb, { text: `VERIFY-AWERE-${id.toUpperCase()}-${config.year}`, width: 100, height: 100 });
-
-            setTimeout(() => {
-                const qr = qb.querySelector('canvas').toDataURL("image/png");
-                if(assets.badge) pdf.addImage(assets.badge, 'PNG', 90, 10, 25, 25);
-                pdf.setFontSize(18).text("AWERE SECONDARY SCHOOL", 105, 45, {align:'center'});
-                pdf.setFontSize(10).text(`${config.term} ${config.year} Progress Report`, 105, 52, {align:'center'});
-                
-                pdf.rect(15, 60, 180, 20);
-                pdf.setFontSize(9);
-                pdf.text(`NAME: ${u.name.toUpperCase()}`, 20, 68);
-                pdf.text(`LIN: ${id.toUpperCase()}`, 20, 75);
-                pdf.text(`CLASS: ${u.class}`, 140, 68);
-                
-                pdf.autoTable({ 
-                    startY: 85, 
-                    head: [['Subject', 'Score', 'Grade', 'Teacher']], 
-                    body: markData,
-                    theme: 'grid',
-                    headStyles: { fillColor: [30, 41, 59] }
-                });
-                
-                const fy = pdf.lastAutoTable.finalY + 15;
-                pdf.addImage(qr, 'PNG', 15, fy, 25, 25);
-                pdf.setFontSize(7).text("SCAN TO VERIFY", 15, fy + 30);
-                
-                if(assets.signature) {
-                    pdf.addImage(assets.signature, 'PNG', 140, fy, 35, 12);
-                    pdf.text("Headteacher's Signature", 140, fy + 18);
-                }
-                pdf.save(`Report_${id}.pdf`);
-            }, 600);
-        }
-
-        // --- REST OF THE UI FUNCTIONS ---
         function uiEnrollment() {
             document.getElementById('portal-title').innerText = "Registration";
             document.getElementById('portal-content').innerHTML = `
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div class="glass">
-                        <h3 class="text-sm font-black uppercase text-blue-600 mb-6">New Learner</h3>
+                        <h3 class="text-sm font-black uppercase text-blue-600 mb-6">Register Learner</h3>
                         <input id="l-lin" placeholder="LIN Number">
                         <input id="l-name" placeholder="Full Name">
                         <input id="l-dob" type="date">
                         <select id="l-gender"><option>Male</option><option>Female</option></select>
                         <select id="l-class">${CLASSES.map(c=>`<option>${c}</option>`).join('')}</select>
-                        <p class="text-[10px] font-bold text-slate-400 mt-4 mb-2 uppercase">Subject Selection</p>
+                        <p class="text-[10px] font-bold text-slate-400 mt-4 mb-2 uppercase">Subjects</p>
                         <div class="flex flex-wrap gap-2 mb-6">
                             ${SUBJECTS.map(s => `<label class="subject-tag"><input type="checkbox" value="${s}" class="sub-check"> ${s}</label>`).join('')}
                         </div>
                         <button onclick="saveL()" class="btn-primary w-full">Register Learner</button>
                     </div>
                     <div class="glass">
-                        <h3 class="text-sm font-black uppercase text-purple-600 mb-6">New Staff</h3>
+                        <h3 class="text-sm font-black uppercase text-purple-600 mb-6">Register Staff</h3>
                         <input id="s-id" placeholder="Staff ID">
                         <input id="s-name" placeholder="Full Name">
-                        <select id="s-role"><option>teacher</option><option>dos</option><option>bursar</option><option>headteacher</option></select>
-                        <button onclick="saveS()" class="btn-purple w-full">Register Staff</button>
+                        <select id="s-role" onchange="document.getElementById('teacher-fields').style.display = this.value === 'teacher' ? 'block' : 'none'">
+                            <option value="teacher">teacher</option>
+                            <option value="dos">dos</option>
+                            <option value="bursar">bursar</option>
+                            <option value="headteacher">headteacher</option>
+                        </select>
+                        <div id="teacher-fields" class="mt-4 p-4 bg-slate-50 rounded-xl">
+                            <p class="text-[10px] font-black uppercase mb-3">Add Assignment</p>
+                            <select id="assign-class" class="bg-white">${CLASSES.map(c=>`<option>${c}</option>`).join('')}</select>
+                            <select id="assign-sub" class="bg-white">${SUBJECTS.map(s=>`<option>${s}</option>`).join('')}</select>
+                            <button onclick="addAssignment()" class="text-xs font-bold text-blue-600">+ Add Assignment</button>
+                            <div id="assignment-list" class="flex flex-wrap gap-1 mt-3"></div>
+                        </div>
+                        <button onclick="saveS()" class="btn-purple w-full mt-4">Register Staff</button>
                     </div>
                 </div>`;
+        }
+
+        let currentAssignments = [];
+        function addAssignment() {
+            const cls = document.getElementById('assign-class').value;
+            const sub = document.getElementById('assign-sub').value;
+            currentAssignments.push({ class: cls, subject: sub });
+            renderAssignments();
+        }
+        function renderAssignments() {
+            document.getElementById('assignment-list').innerHTML = currentAssignments.map((a, i) => 
+                `<span class="bg-white border px-2 py-1 rounded-md text-[9px] font-bold">${a.class}:${a.subject} <button onclick="currentAssignments.splice(${i},1);renderAssignments()" class="text-red-500 ml-1">x</button></span>`).join('');
         }
 
         async function saveL() {
@@ -309,70 +232,34 @@
 
         async function saveS() {
             const id = document.getElementById('s-id').value.toLowerCase().trim();
-            await db.collection("users").doc(id).set({
-                name: document.getElementById('s-name').value,
-                role: document.getElementById('s-role').value,
-                password: '0000'
-            });
-            alert("Staff Registered."); uiEnrollment();
+            const role = document.getElementById('s-role').value;
+            const data = { name: document.getElementById('s-name').value, role: role, password: '0000' };
+            if(role === 'teacher') data.assignments = currentAssignments;
+            await db.collection("users").doc(id).set(data);
+            alert("Staff Registered."); currentAssignments = []; uiEnrollment();
         }
 
-        async function uiRegistry() {
-            document.getElementById('portal-title').innerText = "System Registry";
-            const snap = await db.collection("users").get();
-            let h = `<div class="glass overflow-x-auto"><table class="w-full text-left text-xs">
-                <thead class="bg-slate-50 border-b"><tr><th class="p-4">ID</th><th>Name</th><th>Role/Class</th><th>Actions</th></tr></thead><tbody>`;
-            snap.forEach(doc => {
-                if(doc.id === 'admin' && me.id !== 'admin') return;
-                const u = doc.data();
-                h += `<tr class="border-b">
-                    <td class="p-4 font-bold uppercase text-blue-600">${doc.id}</td>
-                    <td class="p-4 font-semibold">${u.name}</td>
-                    <td class="p-4 uppercase">${u.class || u.role}</td>
-                    <td class="p-4"><button onclick="deleteU('${doc.id}')" class="text-red-500 font-bold">Wipe</button></td>
-                </tr>`;
-            });
-            document.getElementById('portal-content').innerHTML = h + `</tbody></table></div>`;
-        }
+        // --- 💰 FINANCIALS (BURSAR/DEV ONLY) + SUMMARY ---
+        async function uiBursar() {
+            if(!['dev', 'bursar'].includes(me.role)) return alert("Access Denied.");
+            document.getElementById('portal-title').innerText = "Financial Hub";
+            
+            const learners = await db.collection("users").where("role", "==", "learner").get();
+            let totalBalance = 0;
+            learners.forEach(l => totalBalance += (l.data().balance || 0));
 
-        async function deleteU(id) { if(confirm("Wipe Record?")) { await db.collection("users").doc(id).delete(); uiRegistry(); } }
-
-        async function uiLearnerProfile() {
-            document.getElementById('portal-title').innerText = "My Profile";
-            const age = me.dob ? (2026 - new Date(me.dob).getFullYear()) : "N/A";
             document.getElementById('portal-content').innerHTML = `
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div class="glass lg:col-span-1">
-                        <div class="w-16 h-16 bg-blue-600 rounded-full mb-4 flex items-center justify-center text-white text-2xl font-bold">${me.name[0]}</div>
-                        <h3 class="text-xl font-black">${me.name}</h3>
-                        <p class="text-xs font-bold text-blue-600 uppercase mb-6">${me.class}</p>
-                        <div class="space-y-2 text-xs">
-                            <div class="flex justify-between border-b pb-1"><span>LIN</span><span class="font-bold uppercase">${me.id}</span></div>
-                            <div class="flex justify-between border-b pb-1"><span>Age</span><span class="font-bold">${age} Yrs</span></div>
-                        </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="glass">
+                        <p class="text-[10px] font-black uppercase text-slate-400">Post Fees Payment</p>
+                        <input id="b-lin" placeholder="Student LIN" class="mt-4">
+                        <input id="b-amt" type="number" placeholder="Amount (UGX)">
+                        <button onclick="pay()" class="btn-primary w-full">Authorize Payment</button>
                     </div>
-                    <div class="lg:col-span-2 space-y-6">
-                        <div class="glass bg-slate-900 text-white">
-                            <p class="text-[10px] uppercase font-bold opacity-50">Fees Balance</p>
-                            <h2 class="text-3xl font-black">UGX ${(me.balance || 0).toLocaleString()}</h2>
-                        </div>
-                        <div class="glass">
-                            <h4 class="text-[10px] uppercase font-bold mb-4 text-slate-400">My Subjects</h4>
-                            <div class="flex flex-wrap gap-2">
-                                ${(me.subjects || []).map(s => `<span class="px-3 py-1 bg-blue-50 text-blue-700 rounded-lg text-xs font-bold">${s}</span>`).join('')}
-                            </div>
-                        </div>
+                    <div class="glass bg-slate-900 text-white flex flex-col justify-center text-center">
+                        <p class="text-[10px] font-black uppercase opacity-50">Total Outstanding Fees</p>
+                        <h2 class="text-3xl font-black mt-2">UGX ${totalBalance.toLocaleString()}</h2>
                     </div>
-                </div>`;
-        }
-
-        function uiBursar() {
-            document.getElementById('portal-title').innerText = "Financials";
-            document.getElementById('portal-content').innerHTML = `
-                <div class="glass max-w-md mx-auto space-y-4">
-                    <input id="b-lin" placeholder="Student LIN">
-                    <input id="b-amt" type="number" placeholder="Payment Amount">
-                    <button onclick="pay()" class="btn-primary w-full">Post Payment</button>
                 </div>`;
         }
 
@@ -383,27 +270,114 @@
             const d = await ref.get();
             if(d.exists) {
                 await ref.update({ balance: (d.data().balance || 0) - amt });
-                alert("Payment Recorded.");
-            }
+                alert("Payment Synchronized."); uiBursar();
+            } else { alert("Student not found."); }
         }
 
-        function uiSettings() {
-            document.getElementById('portal-title').innerText = "System Settings";
+        // --- 📝 ACADEMIC MARKS + COMMENTS ---
+        async function uiMarks() {
+            document.getElementById('portal-title').innerText = "Academic Marks";
+            let optClass = CLASSES, optSub = SUBJECTS;
+            if(me.role === 'teacher') {
+                optClass = [...new Set(me.assignments.map(a => a.class))];
+                optSub = [...new Set(me.assignments.map(a => a.subject))];
+            }
             document.getElementById('portal-content').innerHTML = `
-                <div class="glass max-w-md space-y-4">
-                    <input id="set-badge" placeholder="Badge URL (Direct Image Link)" value="${assets.badge}">
-                    <input id="set-sign" placeholder="Signature URL (Direct Image Link)" value="${assets.signature}">
-                    <button onclick="saveSet()" class="btn-primary w-full">Save Assets</button>
+                <div class="glass flex flex-col md:flex-row gap-4 mb-6">
+                    <select id="m-class" class="mb-0">${optClass.map(c=>`<option>${c}</option>`).join('')}</select>
+                    <select id="m-sub" class="mb-0">${optSub.map(s=>`<option>${s}</option>`).join('')}</select>
+                    <button onclick="loadMarkSheet()" class="btn-primary py-2 px-10">Open Sheet</button>
+                </div>
+                <div id="marks-sheet" class="glass hidden overflow-x-auto"></div>`;
+        }
+
+        async function loadMarkSheet() {
+            const cls = document.getElementById('m-class').value;
+            const sub = document.getElementById('m-sub').value;
+            const sheet = document.getElementById('marks-sheet');
+            const snap = await db.collection("users").where("role", "==", "learner").where("class", "==", cls).where("subjects", "array-contains", sub).get();
+            if(snap.empty) { alert("No students found."); return; }
+            let h = `<table class="w-full text-left text-sm"><thead class="bg-slate-50 border-b"><tr><th class="p-4">Name</th><th class="p-4">Score</th><th class="p-4">Teacher's Comment</th></tr></thead><tbody>`;
+            snap.forEach(doc => { 
+                h += `<tr class="border-b"><td class="p-4 font-bold">${doc.data().name}</td><td class="p-4"><input type="number" class="m-input" data-id="${doc.id}"></td><td class="p-4"><input type="text" class="c-input" data-comment-id="${doc.id}" placeholder="e.g. Excellent work"></td></tr>`; 
+            });
+            h += `</tbody></table><button onclick="saveMarks('${cls}', '${sub}')" class="btn-primary w-full mt-6">Save Marks & Comments</button>`;
+            sheet.innerHTML = h; sheet.classList.remove('hidden');
+        }
+
+        async function saveMarks(cls, sub) {
+            const inputs = document.querySelectorAll('.m-input');
+            const batch = db.batch();
+            inputs.forEach(input => {
+                const sid = input.getAttribute('data-id');
+                const comment = document.querySelector(`[data-comment-id="${sid}"]`).value;
+                if(input.value !== "") {
+                    const ref = db.collection("marks").doc(`${sid}_${config.year}_${config.term}_${sub}`);
+                    batch.set(ref, { studentId: sid, class: cls, subject: sub, score: parseFloat(input.value), comment: comment, year: config.year, term: config.term, teacher: me.name });
+                }
+            });
+            await batch.commit(); alert("Marks and Comments Saved.");
+        }
+
+        function uiReports() {
+            document.getElementById('portal-title').innerText = "Report Hub";
+            document.getElementById('portal-content').innerHTML = `
+                <div class="glass max-w-md mx-auto text-center space-y-4">
+                    <input id="r-lin" placeholder="Student LIN" value="${me.role === 'learner' ? me.id : ''}">
+                    <button onclick="printReport()" class="btn-primary w-full">Generate PDF Report</button>
                 </div>`;
         }
 
-        async function saveSet() {
-            await db.collection("settings").doc("assets").set({
-                badge: document.getElementById('set-badge').value,
-                signature: document.getElementById('set-sign').value
+        async function printReport() {
+            const id = document.getElementById('r-lin').value.toLowerCase().trim();
+            const doc = await db.collection("users").doc(id).get();
+            if(!doc.exists) return alert("User not found.");
+            const u = doc.data();
+            if(u.balance > 0) return alert(`Financial Lock: Balance UGX ${u.balance.toLocaleString()}`);
+
+            const marksSnap = await db.collection("marks").where("studentId", "==", id).where("year", "==", config.year).where("term", "==", config.term).get();
+            const markData = [];
+            marksSnap.forEach(m => {
+                const d = m.data();
+                let g = d.score >= 80 ? 'D1' : d.score >= 75 ? 'D2' : d.score >= 66 ? 'C3' : d.score >= 60 ? 'C4' : d.score >= 55 ? 'C5' : d.score >= 50 ? 'C6' : d.score >= 45 ? 'P7' : d.score >= 35 ? 'P8' : 'F9';
+                markData.push([d.subject, d.score, g, d.comment || "-"]);
             });
-            alert("Settings Saved.");
+
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF();
+            const qb = document.getElementById("qr-buffer");
+            qb.innerHTML = "";
+            new QRCode(qb, { text: `VERIFY-${id.toUpperCase()}-${config.term}`, width: 100, height: 100 });
+
+            setTimeout(() => {
+                const qr = qb.querySelector('canvas').toDataURL("image/png");
+                if(assets.badge) pdf.addImage(assets.badge, 'PNG', 90, 10, 25, 25);
+                pdf.setFontSize(18).text("AWERE SECONDARY SCHOOL", 105, 45, {align:'center'});
+                pdf.setFontSize(10).text(`${config.term} ${config.year} Termly Report`, 105, 52, {align:'center'});
+                pdf.rect(15, 60, 180, 20);
+                pdf.text(`NAME: ${u.name.toUpperCase()}`, 20, 68);
+                pdf.text(`LIN: ${id.toUpperCase()}`, 20, 75);
+                pdf.text(`CLASS: ${u.class}`, 140, 68);
+                pdf.autoTable({ startY: 85, head: [['Subject', 'Score', 'Grade', 'Remarks']], body: markData, theme: 'grid' });
+                pdf.addImage(qr, 'PNG', 15, pdf.lastAutoTable.finalY + 10, 25, 25);
+                pdf.save(`Report_${id}.pdf`);
+            }, 600);
         }
+
+        async function uiRegistry() {
+            document.getElementById('portal-title').innerText = "System Registry";
+            const snap = await db.collection("users").get();
+            let h = `<div class="glass overflow-x-auto"><table class="w-full text-left text-xs"><thead class="bg-slate-50 border-b"><tr><th class="p-4">ID</th><th>Name</th><th>Role/Class</th><th>Details</th><th>Actions</th></tr></thead><tbody>`;
+            snap.forEach(doc => {
+                const u = doc.data();
+                const details = u.role === 'teacher' ? (u.assignments || []).map(a => `${a.class}:${a.subject}`).join(', ') : (u.class || u.role);
+                h += `<tr class="border-b"><td class="p-4 font-bold uppercase text-blue-600">${doc.id}</td><td class="p-4 font-semibold">${u.name}</td><td class="p-4 uppercase">${u.role}</td><td class="p-4 text-[9px]">${details}</td><td class="p-4"><button onclick="deleteU('${doc.id}')" class="text-red-500 font-bold">Wipe</button></td></tr>`;
+            });
+            document.getElementById('portal-content').innerHTML = h + `</tbody></table></div>`;
+        }
+        async function deleteU(id) { if(confirm("Wipe Record?")) { await db.collection("users").doc(id).delete(); uiRegistry(); } }
+        function uiSettings() { document.getElementById('portal-title').innerText = "System Settings"; document.getElementById('portal-content').innerHTML = `<div class="glass max-w-md space-y-4"><input id="set-badge" placeholder="Badge URL" value="${assets.badge}"><input id="set-sign" placeholder="Signature URL" value="${assets.signature}"><button onclick="saveSet()" class="btn-primary w-full">Save Assets</button></div>`; }
+        async function saveSet() { await db.collection("settings").doc("assets").set({ badge: document.getElementById('set-badge').value, signature: document.getElementById('set-sign').value }); alert("Saved."); }
     </script>
 </body>
 </html>
