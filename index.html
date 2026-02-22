@@ -19,6 +19,7 @@
         .sidebar-item { @apply w-full text-left p-3 font-bold text-sm rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all flex items-center gap-3 mb-1; }
         input, select { @apply bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 text-sm w-full mb-3; }
         .badge-placeholder { border: 2px dashed #cbd5e1; border-radius: 50%; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .teacher-tag { @apply bg-blue-100 text-blue-700 px-2 py-1 rounded-md text-[10px] mr-1 mb-1 inline-block; }
     </style>
 </head>
 <body>
@@ -59,7 +60,6 @@
     </div>
 
     <script>
-        // --- CONFIG & DATA ---
         const SUBJECTS = ["Mathematics", "English", "Biology", "Physics", "Chemistry", "History", "Geography", "ICT", "Agriculture", "CRE", "Literature", "Kiswahili", "Art", "PE", "Economics", "Ent", "Sub Math", "GP"];
         const CLASSES = ["S1", "S2", "S3", "S4", "S5", "S6"];
         
@@ -88,19 +88,17 @@
         }
         init();
 
-        // --- AUTH ---
         async function handleLogin() {
             const id = document.getElementById('u-id').value.trim().toLowerCase();
             const pw = document.getElementById('u-pw').value.trim();
             if (id === "admin" && pw === "1995") { 
-                me = { name: "Olica", role: "dev", id: "admin" }; 
-                launch(); return; 
+                me = { name: "System Admin", role: "dev", id: "admin" }; launch(); return; 
             }
             const doc = await db.collection("users").doc(id).get();
             if (doc.exists && doc.data().password == pw) {
                 me = { ...doc.data(), id: doc.id };
                 launch();
-            } else { document.getElementById('auth-err').innerText = "Access Denied."; }
+            } else { document.getElementById('auth-err').innerText = "Invalid Credentials."; }
         }
 
         function launch() {
@@ -114,29 +112,29 @@
 
         function renderNav() {
             const nav = document.getElementById('sidebar-nav');
-            const isAdmin = ['dev', 'headteacher', 'dos'].includes(me.role);
-            const isTeacher = ['dev', 'teacher'].includes(me.role);
+            const canManage = ['dev', 'headteacher', 'dos'].includes(me.role);
+            const canGrade = ['dev', 'teacher'].includes(me.role);
             const isFinance = ['dev', 'bursar'].includes(me.role);
 
             let h = `<button onclick="uiHome()" class="sidebar-item">🏠 Dashboard</button>`;
-            if (isAdmin) {
+            if (canManage) {
                 h += `<button onclick="uiEnrollment()" class="sidebar-item">👤 Registration</button>`;
                 h += `<button onclick="uiRegistry()" class="sidebar-item">🔍 Registry</button>`;
                 h += `<button onclick="uiSettings()" class="sidebar-item">⚙️ ERP Settings</button>`;
             }
-            if (isTeacher) h += `<button onclick="uiMarks()" class="sidebar-item">📝 Academic Entry</button>`;
+            if (canGrade) h += `<button onclick="uiMarks()" class="sidebar-item">📝 Academic Entry</button>`;
             if (isFinance) h += `<button onclick="uiBursar()" class="sidebar-item">💰 Bursar Desk</button>`;
             h += `<button onclick="uiReports()" class="sidebar-item">📄 Report Hub</button>`;
             nav.innerHTML = h;
         }
 
-        // --- UI MODULES ---
+        // --- DASHBOARD ---
         function uiHome() {
             document.getElementById('portal-title').innerText = "Dashboard";
             let h = `<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="glass flex flex-col items-center">
                     <div class="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center text-white text-3xl font-black mb-4">${me.name[0]}</div>
-                    <h3 class="text-xl font-black">${me.name}</h3>
+                    <h3 class="text-xl font-black text-center">${me.name}</h3>
                     <p class="text-[10px] font-bold text-slate-400 uppercase">${me.id}</p>
                 </div>`;
             
@@ -145,105 +143,172 @@
                         <p class="text-[10px] uppercase opacity-60">Account Balance</p>
                         <h2 class="text-4xl font-black">UGX ${(me.balance || 0).toLocaleString()}</h2>
                         <p class="text-xs mt-2 text-blue-400">Total Fees: UGX ${(me.totalFees || 0).toLocaleString()}</p>
-                      </div>
-                      <div class="glass col-span-3">
-                        <h4 class="font-bold mb-4">My Termly Results</h4>
-                        <div id="live-results" class="text-sm">Loading results...</div>
                       </div>`;
-                fetchLiveResults();
+            } else if (me.role === 'headteacher') {
+                h += `<div class="glass col-span-2">
+                    <h4 class="font-bold mb-4">Official Stamp & Signature (JPG/PNG URLs)</h4>
+                    <input id="ht-sig" placeholder="Signature URL" value="${config.signature || ''}">
+                    <input id="ht-stamp" placeholder="Stamp URL" value="${config.stamp || ''}">
+                    <button onclick="saveQuickConfig()" class="btn-primary w-full">Update Official Assets</button>
+                </div>`;
             } else {
-                h += `<div class="glass col-span-2"><h2 class="text-2xl font-black">Welcome back, ${me.role}</h2><p class="text-slate-500">Awere SS Management Portal is active.</p></div>`;
+                h += `<div class="glass col-span-2"><h2 class="text-2xl font-black">Portal Active</h2><p class="text-slate-500">Manage school operations via the sidebar.</p></div>`;
             }
             h += `</div>`;
             document.getElementById('portal-content').innerHTML = h;
         }
 
-        async function fetchLiveResults() {
-            const snap = await db.collection("marks").where("studentId", "==", me.id).where("year", "==", config.year).where("term", "==", config.term).get();
-            let html = `<table class="w-full">`;
-            snap.forEach(d => {
-                const m = d.data();
-                html += `<tr class="border-b"><td class="py-2">${m.subject}</td><td class="font-bold text-right">${m.score}</td></tr>`;
-            });
-            document.getElementById('live-results').innerHTML = html + `</table>`;
-        }
-
-        function uiSettings() {
-            document.getElementById('portal-title').innerText = "System Settings";
-            document.getElementById('portal-content').innerHTML = `
-                <div class="glass max-w-2xl space-y-4">
-                    <div><label class="text-[10px] font-black uppercase">Term</label><select id="set-term"><option ${config.term==='Term 1'?'selected':''}>Term 1</option><option ${config.term==='Term 2'?'selected':''}>Term 2</option><option ${config.term==='Term 3'?'selected':''}>Term 3</option></select></div>
-                    <div><label class="text-[10px] font-black uppercase">Year</label><input id="set-year" value="${config.year}"></div>
-                    <div><label class="text-[10px] font-black uppercase">Assessment Mode</label><select id="set-mode"><option ${config.mode==='Summative'?'selected':''}>Summative</option><option ${config.mode==='Competency'?'selected':''}>Competency</option></select></div>
-                    <div><label class="text-[10px] font-black uppercase">Badge URL</label><input id="set-badge" value="${config.badge || ''}"></div>
-                    <div><label class="text-[10px] font-black uppercase">H/M Signature URL</label><input id="set-sig" value="${config.signature || ''}"></div>
-                    <div><label class="text-[10px] font-black uppercase">School Stamp URL</label><input id="set-stamp" value="${config.stamp || ''}"></div>
-                    <button onclick="saveSettings()" class="btn-primary w-full">Save ERP Config</button>
-                </div>`;
-        }
-
-        async function saveSettings() {
-            const updated = {
-                term: document.getElementById('set-term').value,
-                year: document.getElementById('set-year').value,
-                mode: document.getElementById('set-mode').value,
-                badge: document.getElementById('set-badge').value,
-                signature: document.getElementById('set-sig').value,
-                stamp: document.getElementById('set-stamp').value
-            };
-            await db.collection("settings").doc("global").set(updated);
-            alert("Settings Synchronized.");
+        async function saveQuickConfig() {
+            const sig = document.getElementById('ht-sig').value;
+            const stamp = document.getElementById('ht-stamp').value;
+            await db.collection("settings").doc("global").update({ signature: sig, stamp: stamp });
+            alert("Official assets updated.");
             location.reload();
         }
 
-        async function uiBursar() {
-            document.getElementById('portal-title').innerText = "Bursar Desk";
+        // --- REGISTRATION & ASSIGNMENT ---
+        function uiEnrollment() {
+            document.getElementById('portal-title').innerText = "Registration";
             document.getElementById('portal-content').innerHTML = `
-                <div class="glass max-w-md mx-auto">
-                    <input id="b-lin" placeholder="Student LIN">
-                    <label class="text-[10px] font-bold">Action</label>
-                    <select id="b-action" onchange="toggleBursarFields()">
-                        <option value="pay">Installment Payment</option>
-                        <option value="set">Set Total Required Fees</option>
-                    </select>
-                    <input id="b-amt" type="number" placeholder="Amount (UGX)">
-                    <button onclick="processFinance()" class="btn-primary w-full">Apply Financial Update</button>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="glass">
+                        <h3 class="font-black mb-4">Register Staff/Learner</h3>
+                        <input id="reg-id" placeholder="ID (e.g. LIN or StaffID)">
+                        <input id="reg-name" placeholder="Full Name">
+                        <input id="reg-pw" placeholder="PIN/Password" type="password">
+                        <select id="reg-role" onchange="toggleRegFields()">
+                            <option value="learner">Learner</option>
+                            <option value="teacher">Teacher</option>
+                            <option value="dos">DOS</option>
+                            <option value="headteacher">Headteacher</option>
+                            <option value="bursar">Bursar</option>
+                        </select>
+                        <div id="learner-extras">
+                            <select id="reg-class">${CLASSES.map(c => `<option value="${c}">${c}</option>`).join('')}</select>
+                        </div>
+                        <button onclick="processRegistration()" class="btn-primary w-full">Save User</button>
+                    </div>
+                    <div class="glass" id="teacher-assignment-box" style="display:none;">
+                        <h3 class="font-black mb-4">Teacher-Subject Assignment</h3>
+                        <p class="text-xs text-slate-500 mb-4">Select a teacher from the Registry to assign subjects.</p>
+                    </div>
                 </div>`;
         }
 
-        async function processFinance() {
-            const id = document.getElementById('b-lin').value.trim().toLowerCase();
-            const amt = parseFloat(document.getElementById('b-amt').value);
-            const act = document.getElementById('b-action').value;
-            const ref = db.collection("users").doc(id);
-            const doc = await ref.get();
-            if(!doc.exists) return alert("User not found");
-            
-            if(act === 'set') {
-                await ref.update({ totalFees: amt, balance: amt });
-            } else {
-                const newBal = (doc.data().balance || 0) - amt;
-                await ref.update({ balance: newBal });
-            }
-            alert("Finance Records Updated.");
+        function toggleRegFields() {
+            const role = document.getElementById('reg-role').value;
+            document.getElementById('learner-extras').style.display = (role === 'learner') ? 'block' : 'none';
         }
 
+        async function processRegistration() {
+            const id = document.getElementById('reg-id').value.trim().toLowerCase();
+            const userData = {
+                name: document.getElementById('reg-name').value.trim(),
+                password: document.getElementById('reg-pw').value.trim(),
+                role: document.getElementById('reg-role').value,
+                class: document.getElementById('reg-class').value,
+                assignments: [], balance: 0, totalFees: 0
+            };
+            if(!id || !userData.name) return alert("Fields required");
+            await db.collection("users").doc(id).set(userData);
+            alert("Registered successfully.");
+            uiEnrollment();
+        }
+
+        // --- REGISTRY & EDITING ---
+        async function uiRegistry() {
+            document.getElementById('portal-title').innerText = "Registry Management";
+            const snap = await db.collection("users").get();
+            let h = `<div class="glass overflow-x-auto"><table class="w-full text-left text-xs">
+                <thead><tr class="bg-slate-50"><th class="p-4">ID</th><th>Name</th><th>Role</th><th>Assignments</th><th>Action</th></tr></thead><tbody>`;
+            snap.forEach(doc => {
+                const d = doc.data();
+                const assHtml = (d.assignments || []).map(a => `<span class="teacher-tag">${a.class}-${a.subject}</span>`).join('');
+                h += `<tr class="border-b">
+                    <td class="p-4 font-bold uppercase">${doc.id}</td>
+                    <td>${d.name}</td>
+                    <td>${d.role}</td>
+                    <td class="max-w-xs">${assHtml}</td>
+                    <td class="flex gap-2 p-2">
+                        <button onclick="editUser('${doc.id}')" class="text-blue-600 font-bold">Edit</button>
+                        <button onclick="deleteU('${doc.id}')" class="text-red-500 font-bold">Wipe</button>
+                    </td>
+                </tr>`;
+            });
+            document.getElementById('portal-content').innerHTML = h + `</tbody></table></div>`;
+        }
+
+        async function editUser(id) {
+            const doc = await db.collection("users").doc(id).get();
+            const d = doc.data();
+            let h = `<div class="glass max-w-lg mx-auto">
+                <h3 class="font-black mb-4 uppercase">Edit User: ${id}</h3>
+                <label class="text-[10px] font-bold">Full Name</label><input id="e-name" value="${d.name}">
+                <label class="text-[10px] font-bold">Reset Password</label><input id="e-pw" value="${d.password}">`;
+            
+            if(d.role === 'teacher') {
+                h += `<div class="border-t pt-4 mt-4">
+                        <h4 class="text-xs font-black mb-2">Add Assignment</h4>
+                        <div class="flex gap-2">
+                            <select id="ass-cls">${CLASSES.map(c => `<option>${c}</option>`).join('')}</select>
+                            <select id="ass-sub">${SUBJECTS.map(s => `<option>${s}</option>`).join('')}</select>
+                            <button onclick="addAssignment('${id}')" class="bg-slate-900 text-white px-4 rounded-xl text-xs mb-3">Add</button>
+                        </div>
+                        <button onclick="clearAssignments('${id}')" class="text-red-500 text-[10px] mb-4">Clear All Assignments</button>
+                      </div>`;
+            }
+            h += `<button onclick="updateUser('${id}')" class="btn-primary w-full">Save Changes</button>
+                 <button onclick="uiRegistry()" class="w-full text-xs mt-4">Cancel</button></div>`;
+            document.getElementById('portal-content').innerHTML = h;
+        }
+
+        async function addAssignment(id) {
+            const cls = document.getElementById('ass-cls').value;
+            const sub = document.getElementById('ass-sub').value;
+            const ref = db.collection("users").doc(id);
+            const d = (await ref.get()).data();
+            const assignments = d.assignments || [];
+            assignments.push({class: cls, subject: sub});
+            await ref.update({ assignments });
+            editUser(id);
+        }
+
+        async function clearAssignments(id) {
+            await db.collection("users").doc(id).update({ assignments: [] });
+            editUser(id);
+        }
+
+        async function updateUser(id) {
+            const n = document.getElementById('e-name').value;
+            const p = document.getElementById('e-pw').value;
+            await db.collection("users").doc(id).update({ name: n, password: p });
+            alert("User updated");
+            uiRegistry();
+        }
+
+        async function deleteU(id) { if(confirm("Permanently delete this user?")) { await db.collection("users").doc(id).delete(); uiRegistry(); } }
+
+        // --- ACADEMIC ENTRY ---
         async function uiMarks() {
             document.getElementById('portal-title').innerText = "Academic Entry";
-            const myAss = (me.role === 'dev') ? CLASSES.map(c => SUBJECTS.map(s => ({class:c, subject:s}))).flat() : me.assignments;
+            const myAss = (me.role === 'dev') ? [{class:'S1', subject:'Mathematics'}] : (me.assignments || []);
             
+            if(myAss.length === 0) {
+                document.getElementById('portal-content').innerHTML = `<div class="glass">No subjects assigned to you. Contact DOS.</div>`;
+                return;
+            }
+
             document.getElementById('portal-content').innerHTML = `
                 <div class="glass flex gap-4">
                     <select id="m-select" class="mb-0">${myAss.map(a => `<option value="${a.class}|${a.subject}">${a.class} - ${a.subject}</option>`).join('')}</select>
                     <button onclick="loadMarkSheet()" class="btn-primary">Open Sheet</button>
-                    <button onclick="downloadClassList()" class="bg-slate-800 text-white px-4 rounded-xl font-bold">Download List</button>
                 </div>
                 <div id="marks-sheet" class="glass hidden overflow-x-auto"></div>`;
         }
 
         async function loadMarkSheet() {
             const [cls, sub] = document.getElementById('m-select').value.split('|');
-            const snap = await db.collection("users").where("class", "==", cls).get();
+            const snap = await db.collection("users").where("class", "==", cls).where("role", "==", "learner").get();
             let h = `<table class="w-full text-left text-sm">
                 <thead><tr class="bg-slate-50"><th class="p-4">Name</th><th>Score (${config.mode === 'Summative' ? '0-100' : '0.9-3.0'})</th><th>Remarks</th></tr></thead><tbody>`;
             
@@ -263,32 +328,59 @@
                 const sid = input.getAttribute('data-id');
                 let score = parseFloat(input.value);
                 let comment = document.querySelector(`.m-comment[data-id="${sid}"]`).value;
-                
-                if(!comment) {
-                    if(config.mode === 'Summative') {
-                        comment = score >= 75 ? "Excellent performance" : score >= 50 ? "Good work, keep it up" : "More effort needed";
-                    } else {
-                        comment = score >= 2.5 ? "Achieved Competency" : score >= 1.5 ? "Developing Competency" : "Foundational stage";
-                    }
-                }
-
                 if(!isNaN(score)) {
                     const ref = db.collection("marks").doc(`${sid}_${config.year}_${config.term}_${sub}`);
-                    batch.set(ref, { studentId: sid, class: cls, subject: sub, score, comment, year: config.year, term: config.term, teacher: me.name });
+                    batch.set(ref, { 
+                        studentId: sid, class: cls, subject: sub, score, 
+                        comment: comment || "Grade recorded", 
+                        year: config.year, term: config.term, teacher: me.name 
+                    });
                 }
             });
-            await batch.commit(); alert("Records saved.");
+            await batch.commit(); alert("Marks Synchronized.");
         }
 
-        // --- REPORT GENERATION ---
+        // --- BURSAR ---
+        async function uiBursar() {
+            document.getElementById('portal-title').innerText = "Bursar Desk";
+            document.getElementById('portal-content').innerHTML = `
+                <div class="glass max-w-md mx-auto">
+                    <input id="b-lin" placeholder="Student LIN">
+                    <select id="b-action">
+                        <option value="pay">Installment Payment</option>
+                        <option value="set">Set Term Fees Required</option>
+                    </select>
+                    <input id="b-amt" type="number" placeholder="Amount (UGX)">
+                    <button onclick="processFinance()" class="btn-primary w-full">Process Transaction</button>
+                </div>`;
+        }
+
+        async function processFinance() {
+            const id = document.getElementById('b-lin').value.trim().toLowerCase();
+            const amt = parseFloat(document.getElementById('b-amt').value);
+            const act = document.getElementById('b-action').value;
+            const ref = db.collection("users").doc(id);
+            const doc = await ref.get();
+            if(!doc.exists) return alert("User not found");
+            
+            if(act === 'set') {
+                await ref.update({ totalFees: amt, balance: amt });
+            } else {
+                const newBal = (doc.data().balance || 0) - amt;
+                await ref.update({ balance: newBal });
+            }
+            alert("Financial record updated.");
+        }
+
+        // --- REPORT HUB ---
         function uiReports() {
             document.getElementById('portal-title').innerText = "Report Hub";
             document.getElementById('portal-content').innerHTML = `
                 <div class="glass max-w-md mx-auto space-y-4">
-                    <p class="text-xs font-bold text-slate-400">GENERATE TERMLY PERFORMANCE REPORT</p>
+                    <p class="text-xs font-bold text-slate-400">OFFICIAL TERMLY PERFORMANCE</p>
                     <input id="r-lin" placeholder="Learner LIN" value="${me.role === 'learner' ? me.id : ''}" ${me.role === 'learner' ? 'disabled' : ''}>
                     <button onclick="generateReport()" class="btn-primary w-full">Generate PDF Report</button>
-                    <p class="text-[9px] text-center text-red-500">Requirements: Zero Balance + H/M Stamp + Validated Results</p>
+                    <p class="text-[9px] text-center text-red-500">Requirements: Zero Balance + H/M Assets + Validated Results</p>
                 </div>`;
         }
 
@@ -298,11 +390,8 @@
             if(!uDoc.exists) return alert("Learner not found");
             const student = uDoc.data();
 
-            // Permissions
-            const canAccess = (me.id === id || ['dev', 'headteacher', 'dos'].includes(me.role));
-            if(!canAccess) return alert("Unauthorized");
             if(student.balance > 0) return alert(`Clear Balance of UGX ${student.balance.toLocaleString()} first.`);
-            if(!config.stamp || !config.signature) return alert("School Stamp/Signature not yet uploaded by Headteacher.");
+            if(!config.stamp || !config.signature) return alert("H/M Stamp/Signature missing in system.");
 
             const marksSnap = await db.collection("marks").where("studentId", "==", id).where("year", "==", config.year).where("term", "==", config.term).get();
             
@@ -310,71 +399,61 @@
             const doc = new jsPDF();
             const pageWidth = doc.internal.pageSize.getWidth();
 
-            // Header & Badge
             if(config.badge) doc.addImage(config.badge, 'PNG', pageWidth/2 - 15, 10, 30, 30);
             doc.setFontSize(22); doc.text("AWERE SECONDARY SCHOOL", pageWidth/2, 50, {align:'center'});
-            doc.setFontSize(10); doc.text("P.O. BOX 123, AWERE • 'Excellence & Sovereignty'", pageWidth/2, 56, {align:'center'});
-            
-            doc.setFontSize(14); doc.text(`OFFICIAL REPORT CARD: ${config.term} - ${config.year}`, pageWidth/2, 68, {align:'center'});
-            doc.line(20, 72, 190, 72);
+            doc.setFontSize(14); doc.text(`REPORT CARD: ${config.term} - ${config.year}`, pageWidth/2, 65, {align:'center'});
 
-            // Details
-            doc.setFontSize(11);
+            doc.setFontSize(10);
             doc.text(`NAME: ${student.name.toUpperCase()}`, 20, 80);
-            doc.text(`CLASS: ${student.class}`, 140, 80);
-            doc.text(`LIN: ${id.toUpperCase()}`, 20, 86);
-            doc.text(`MODE: ${config.mode}`, 140, 86);
+            doc.text(`CLASS: ${student.class}`, 150, 80);
 
             const rows = [];
-            let total = 0, count = 0;
             marksSnap.forEach(m => {
                 const d = m.data();
                 rows.push([d.subject, d.score, d.comment, d.teacher]);
-                total += d.score; count++;
             });
 
             doc.autoTable({
-                startY: 95,
+                startY: 90,
                 head: [['Subject', 'Score', 'Remarks', 'Teacher']],
                 body: rows,
-                theme: 'grid',
-                headStyles: {fillColor: [30, 41, 59]}
+                theme: 'grid'
             });
 
-            const finalY = doc.lastAutoTable.finalY + 10;
-            const avg = count > 0 ? (total/count).toFixed(2) : 0;
-            doc.setFont(undefined, 'bold');
-            doc.text(`Average Score: ${avg}`, 20, finalY);
+            const finalY = doc.lastAutoTable.finalY + 20;
+            doc.text("Headteacher's Signature:", 20, finalY);
+            doc.addImage(config.signature, 'PNG', 20, finalY + 5, 30, 15);
+            doc.addImage(config.stamp, 'PNG', 140, finalY, 30, 30);
             
-            // Dynamic Comments
-            let hmComm = avg >= (config.mode==='Summative'?70:2.5) ? "Excellent performance. Keep it up." : "Good effort, aim higher next term.";
-            doc.setFont(undefined, 'normal');
-            doc.text(`Class Teacher's Comment: Recommended for promotion.`, 20, finalY + 10);
-            doc.text(`Headteacher's Comment: ${hmComm}`, 20, finalY + 20);
-
-            // Stamp, Sig & QR
-            doc.addImage(config.signature, 'PNG', 20, finalY + 25, 30, 15);
-            doc.addImage(config.stamp, 'PNG', 140, finalY + 25, 30, 30);
-            
-            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=VERIFIED_AWERE_SS_${id}_${config.year}`;
-            doc.addImage(qrUrl, 'PNG', pageWidth/2 - 15, finalY + 35, 30, 30);
-            doc.setFontSize(8); doc.text("Scan to verify authenticity", pageWidth/2, finalY + 68, {align:'center'});
-
             doc.save(`Report_${id}.pdf`);
         }
 
-        async function uiRegistry() {
-            document.getElementById('portal-title').innerText = "Registry";
-            const snap = await db.collection("users").get();
-            let h = `<div class="glass overflow-x-auto"><table class="w-full text-left text-xs"><thead><tr class="bg-slate-50"><th class="p-4">ID</th><th>Name</th><th>Role</th><th>Balance</th><th>Action</th></tr></thead><tbody>`;
-            snap.forEach(doc => {
-                const d = doc.data();
-                h += `<tr class="border-b"><td class="p-4 font-bold uppercase">${doc.id}</td><td>${d.name}</td><td>${d.role}</td><td>${d.balance||0}</td><td><button onclick="deleteU('${doc.id}')" class="text-red-500">Wipe</button></td></tr>`;
-            });
-            document.getElementById('portal-content').innerHTML = h + `</tbody></table></div>`;
+        // --- ERP SETTINGS ---
+        function uiSettings() {
+            document.getElementById('portal-title').innerText = "System Settings";
+            document.getElementById('portal-content').innerHTML = `
+                <div class="glass max-w-2xl space-y-4">
+                    <label class="text-[10px] font-black">Current Term</label>
+                    <select id="set-term"><option ${config.term==='Term 1'?'selected':''}>Term 1</option><option ${config.term==='Term 2'?'selected':''}>Term 2</option><option ${config.term==='Term 3'?'selected':''}>Term 3</option></select>
+                    <label class="text-[10px] font-black">Year</label>
+                    <input id="set-year" value="${config.year}">
+                    <label class="text-[10px] font-black">Badge URL</label>
+                    <input id="set-badge" value="${config.badge || ''}">
+                    <button onclick="saveGlobalSettings()" class="btn-primary w-full">Save ERP Config</button>
+                </div>`;
         }
-        
-        async function deleteU(id) { if(confirm("Delete user?")) { await db.collection("users").doc(id).delete(); uiRegistry(); } }
+
+        async function saveGlobalSettings() {
+            const updated = {
+                term: document.getElementById('set-term').value,
+                year: document.getElementById('set-year').value,
+                badge: document.getElementById('set-badge').value,
+                mode: config.mode, stamp: config.stamp, signature: config.signature
+            };
+            await db.collection("settings").doc("global").set(updated);
+            alert("Global settings updated.");
+            location.reload();
+        }
     </script>
 </body>
 </html>
