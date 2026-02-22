@@ -13,62 +13,57 @@
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f1f5f9; color: #1e293b; }
-        .glass { background: white; border: 1px solid #e2e8f0; border-radius: 24px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
-        .btn-primary { @apply bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700 active:scale-95 transition-all shadow-lg shadow-blue-200; }
-        .sidebar-item { @apply w-full text-left p-4 font-bold text-sm rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all flex items-center gap-3 mb-1 text-slate-600; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f8fafc; color: #1e293b; }
+        .glass { background: white; border: 1px solid #e2e8f0; border-radius: 24px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
+        .btn-primary { @apply bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700 active:scale-95 transition-all; }
+        .sidebar-item { @apply w-full text-left p-3 font-bold text-sm rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all flex items-center gap-3 mb-1; }
         input, select { @apply bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 text-sm w-full mb-3; }
-        .badge-placeholder { border: 2px dashed #cbd5e1; border-radius: 50%; width: 70px; height: 70px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: white; }
-        .tag { @apply inline-block bg-blue-100 text-blue-700 text-[10px] px-2 py-1 rounded-md font-bold uppercase; }
+        .badge-placeholder { border: 2px dashed #cbd5e1; border-radius: 50%; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .tag { @apply inline-block bg-blue-50 text-blue-700 text-[10px] px-2 py-1 rounded-md mr-1 mb-1 font-bold border border-blue-100; }
         .subject-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
-        
-        /* Toggle Switch */
-        .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+        .switch { position: relative; display: inline-block; width: 50px; height: 24px; }
         .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px; }
-        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 24px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: #2563eb; }
-        input:checked + .slider:before { transform: translateX(24px); }
-
-        /* University Card Style */
-        .uni-card { @apply bg-white p-6 rounded-3xl border border-slate-100 hover:shadow-xl hover:border-blue-300 transition-all cursor-pointer; }
+        input:checked + .slider:before { transform: translateX(26px); }
     </style>
 </head>
 <body>
 
     <div id="login-view" class="fixed inset-0 z-[999] flex items-center justify-center bg-slate-900 px-6">
         <div class="w-full max-w-md bg-white p-10 rounded-[3rem] shadow-2xl">
-            <div class="flex justify-center mb-4"><div class="badge-placeholder" id="login-badge">BADGE</div></div>
+            <div class="flex justify-center mb-4"><div class="badge-placeholder login-badge">BADGE</div></div>
             <h1 class="text-3xl font-extrabold text-center italic text-slate-800 uppercase">Awere SS</h1>
-            <p class="text-center text-slate-400 text-[10px] font-black uppercase mb-8 tracking-[0.2em]">University Portal Access</p>
+            <p class="text-center text-slate-400 text-[10px] font-black uppercase mb-8">Sovereign Management v3.0</p>
             <input type="text" id="u-id" placeholder="Access ID / LIN">
             <input type="password" id="u-pw" placeholder="Security PIN">
-            <button onclick="handleLogin()" class="btn-primary w-full mt-4">Login to Portal</button>
+            <button onclick="handleLogin()" class="btn-primary w-full mt-4">Enter Portal</button>
             <p id="auth-err" class="text-red-500 text-[10px] mt-4 text-center font-bold"></p>
         </div>
     </div>
 
     <div id="portal-view" style="display: none;" class="min-h-screen flex flex-col lg:flex-row">
-        <aside class="w-full lg:w-72 bg-white border-r border-slate-200 p-8 flex flex-col">
-            <div class="mb-10 flex flex-col items-center">
-                <div class="badge-placeholder mb-4 shadow-sm" id="nav-badge">BADGE</div>
-                <div class="text-xl font-black italic text-slate-800 tracking-tighter text-center leading-none">AWERE SS<br><span class="text-[9px] text-blue-600 tracking-[0.3em] font-black uppercase">Sovereign</span></div>
+        <aside class="w-full lg:w-72 bg-white border-r border-slate-100 p-8 flex flex-col">
+            <div class="mb-6 flex flex-col items-center">
+                <div class="badge-placeholder mb-2 nav-badge">BADGE</div>
+                <div class="text-xl font-black italic text-blue-600 tracking-tighter text-center leading-none">AWERE SS<br><span class="text-[8px] text-slate-400 uppercase">Est. 2026 • Sovereign</span></div>
             </div>
             <nav id="sidebar-nav" class="flex-1"></nav>
             <div class="mt-8 pt-6 border-t border-slate-100">
-                <p id="user-display" class="font-black text-sm text-slate-900"></p>
-                <p id="role-display" class="text-[9px] text-blue-600 font-bold uppercase tracking-widest"></p>
-                <button onclick="location.reload()" class="text-xs font-bold text-red-500 mt-4 flex items-center gap-2">Logout System</button>
+                <p id="user-display" class="font-bold text-sm text-slate-900"></p>
+                <p id="role-display" class="text-[9px] text-blue-500 font-black uppercase tracking-widest"></p>
+                <button onclick="location.reload()" class="text-xs font-bold text-red-500 mt-4 block underline">Logout System</button>
             </div>
         </aside>
 
         <main class="flex-1 p-6 lg:p-12 overflow-y-auto">
-            <header class="flex justify-between items-start mb-10">
+            <header class="flex justify-between items-center mb-10">
                 <div>
-                    <h2 id="portal-title" class="text-4xl font-extrabold tracking-tight text-slate-900">Dashboard</h2>
-                    <p id="mode-indicator" class="text-[10px] font-black text-blue-600 uppercase mt-1"></p>
+                    <h2 id="portal-title" class="text-3xl font-extrabold tracking-tight">Dashboard</h2>
+                    <p id="mode-indicator" class="text-[10px] font-bold text-blue-600 uppercase"></p>
                 </div>
-                <div id="global-tag" class="bg-slate-900 text-white px-5 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg"></div>
+                <div id="global-tag" class="bg-slate-900 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest"></div>
             </header>
             <div id="portal-content" class="space-y-6"></div>
         </main>
@@ -78,6 +73,7 @@
         const SUBJECTS = ["English language", "Mathematics", "Physics", "Chemistry", "Biology", "Geography", "History & Political Education", "CRE", "ICT", "TD", "Entrepreneurship", "Economics", "Sub-Maths", "Sub- ICT", "General Paper", "Agriculture", "Kiswahili", "Acholi", "History"];
         const CLASSES = ["S1", "S2", "S3", "S4", "S5", "S6"];
         
+        // FIREBASE CONFIGURATION (Placeholder - use your credentials)
         const firebaseConfig = { 
             apiKey: "AIzaSyDUoYRjlHxBg3-ddFtsk2tGXAn9X46moHc", 
             authDomain: "awere-erp.firebaseapp.com", 
@@ -92,29 +88,52 @@
         let me = null;
         let config = { term: "Term 1", year: "2026", mode: "Summative", badge: "", stamp: "", signature: "" };
 
+        // --- Core Engines ---
+        function getSummativeGrade(mark) {
+            if (mark >= 80) return { g: "D1", r: "Distinction" };
+            if (mark >= 75) return { g: "D2", r: "Distinction" };
+            if (mark >= 70) return { g: "C3", r: "Credit" };
+            if (mark >= 65) return { g: "C4", r: "Credit" };
+            if (mark >= 60) return { g: "C5", r: "Credit" };
+            if (mark >= 55) return { g: "C6", r: "Credit" };
+            if (mark >= 50) return { g: "P7", r: "Pass" };
+            if (mark >= 45) return { g: "P8", r: "Pass" };
+            return { g: "F9", r: "Fail" };
+        }
+
+        function getAoIDescriptor(score) {
+            if (score >= 2.5) return { l: 3, d: "Proficient", r: "Achievement is outstanding" };
+            if (score >= 1.5) return { l: 2, d: "Moderate", r: "Achievement is good" };
+            return { l: 1, d: "Basic", r: "Achievement is minimal" };
+        }
+
         async function init() {
             const s = await db.collection("settings").doc("global").get();
             if(s.exists) config = s.data();
             document.getElementById('global-tag').innerText = `${config.year} • ${config.term}`;
-            document.getElementById('mode-indicator').innerText = `Current Assessment: ${config.mode}`;
-            if(config.badge) {
-                document.getElementById('login-badge').innerHTML = `<img src="${config.badge}" class="w-full h-full object-cover">`;
-                document.getElementById('nav-badge').innerHTML = `<img src="${config.badge}" class="w-full h-full object-cover">`;
-            }
+            document.getElementById('mode-indicator').innerText = `Assessment: ${config.mode}`;
+            updateBadgeUI();
         }
         init();
+
+        function updateBadgeUI() {
+            if(config.badge) {
+                const img = `<img src="${config.badge}" class="w-full h-full object-cover">`;
+                document.querySelectorAll('.badge-placeholder').forEach(el => el.innerHTML = img);
+            }
+        }
 
         async function handleLogin() {
             const id = document.getElementById('u-id').value.trim().toLowerCase();
             const pw = document.getElementById('u-pw').value.trim();
             if (id === "admin" && pw === "1995") { 
-                me = { name: "Olica Admin", role: "dev", id: "admin" }; launch(); return; 
+                me = { name: "Awere Admin", role: "dev", id: "admin" }; launch(); return; 
             }
             const doc = await db.collection("users").doc(id).get();
             if (doc.exists && doc.data().password == pw) {
                 me = { ...doc.data(), id: doc.id };
                 launch();
-            } else { document.getElementById('auth-err').innerText = "Invalid Credentials."; }
+            } else { document.getElementById('auth-err').innerText = "Security violation: Access Denied."; }
         }
 
         function launch() {
@@ -132,7 +151,7 @@
             const isTeacher = ['dev', 'teacher'].includes(me.role);
             const isFinance = ['dev', 'bursar'].includes(me.role);
 
-            let h = `<button onclick="uiHome()" class="sidebar-item">🏛️ Portal Home</button>`;
+            let h = `<button onclick="uiHome()" class="sidebar-item">🏠 Dashboard</button>`;
             if (isAdmin) {
                 h += `<button onclick="uiEnrollment()" class="sidebar-item">👤 Registration</button>`;
                 h += `<button onclick="uiRegistry()" class="sidebar-item">🔍 Registry</button>`;
@@ -140,76 +159,223 @@
             }
             if (isTeacher) h += `<button onclick="uiMarks()" class="sidebar-item">📝 Academic Entry</button>`;
             if (isFinance) h += `<button onclick="uiBursar()" class="sidebar-item">💰 Bursar Desk</button>`;
-            h += `<button onclick="uiReports()" class="sidebar-item">📄 Document Hub</button>`;
+            h += `<button onclick="uiReports()" class="sidebar-item">📄 Report Hub</button>`;
             nav.innerHTML = h;
         }
 
         function uiHome() {
             document.getElementById('portal-title').innerText = "Dashboard";
-            let h = `<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="glass flex flex-col items-center justify-center text-center">
-                    <div class="w-24 h-24 bg-gradient-to-br from-blue-600 to-indigo-800 rounded-full flex items-center justify-center text-white text-4xl font-black mb-4 shadow-xl border-4 border-white">${me.name[0]}</div>
-                    <h3 class="text-xl font-black text-slate-800">${me.name}</h3>
-                    <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest mt-1">${me.role}</p>
-                    <p class="text-[10px] text-slate-400 mt-4">ID: ${me.id.toUpperCase()}</p>
+            let h = `<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="glass flex flex-col items-center">
+                    <div class="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center text-white text-3xl font-black mb-4">${me.name[0]}</div>
+                    <h3 class="text-xl font-black text-center">${me.name}</h3>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-4">${me.role}</p>
+                    <div class="w-full pt-4 border-t border-slate-100">
+                        <label class="text-[9px] font-bold text-slate-500 uppercase">Change Security PIN</label>
+                        <div class="flex gap-2">
+                            <input id="self-pin" type="password" maxlength="4" placeholder="4 Digits" class="mb-0">
+                            <button onclick="updateSelfPIN()" class="bg-slate-800 text-white px-3 rounded-xl text-[10px]">Save</button>
+                        </div>
+                    </div>
                 </div>`;
             
-            // Teacher Workload Card
-            if(me.role === 'teacher' || me.role === 'dev') {
-                const myAss = me.assignments || [];
-                let assCards = myAss.map(a => `
-                    <div class="uni-card" onclick="uiMarks()">
-                        <p class="text-[10px] font-black text-blue-600 uppercase mb-1">${a.class}</p>
-                        <h4 class="text-lg font-bold text-slate-800">${a.subject}</h4>
-                        <p class="text-[10px] text-slate-400 mt-2">Status: Active Assessment</p>
-                    </div>
-                `).join('');
-                h += `<div class="md:col-span-2 space-y-4">
-                        <h4 class="font-black text-slate-800 uppercase text-xs tracking-widest">My Academic Workload</h4>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">${assCards || '<p class="glass text-slate-400 text-sm">No assignments found.</p>'}</div>
-                      </div>`;
-            } else if (me.role === 'learner') {
-                h += `<div class="md:col-span-2 space-y-4">
-                        <div class="glass bg-slate-900 text-white">
-                            <p class="text-[10px] uppercase opacity-60 font-black">Fees Balance</p>
-                            <h2 class="text-4xl font-black mt-2">UGX ${(me.balance || 0).toLocaleString()}</h2>
-                            <p class="text-xs text-blue-400 mt-2">Full Term: UGX ${(me.totalFees || 0).toLocaleString()}</p>
+            if(me.role === 'learner') {
+                h += `<div class="glass col-span-2">
+                        <div class="flex justify-between mb-6">
+                            <div><p class="text-xs font-bold text-slate-400 uppercase">Current Class</p><h2 class="text-3xl font-black">${me.class}</h2></div>
+                            <div class="text-right"><p class="text-xs font-bold text-slate-400 uppercase">Account Balance</p><h2 class="text-3xl font-black text-blue-600">UGX ${(me.balance || 0).toLocaleString()}</h2></div>
                         </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="uni-card" onclick="uiReports()">
-                                <h4 class="font-bold">Termly Report</h4>
-                                <p class="text-xs text-slate-400">Download PDF Results</p>
-                            </div>
-                            <div class="uni-card">
-                                <h4 class="font-bold">My Courses</h4>
-                                <p class="text-xs text-slate-400">${(me.enrolledSubjects || []).length} Subjects</p>
-                            </div>
+                        <p class="text-[10px] font-black text-slate-400 uppercase mb-3">Enrolled Subjects</p>
+                        <div class="subject-grid">
+                            ${(me.enrolledSubjects || []).map(s => `<div class="tag text-center">${s}</div>`).join('')}
                         </div>
                       </div>`;
             } else {
-                h += `<div class="glass md:col-span-2 flex flex-col justify-center">
-                        <h2 class="text-2xl font-black italic text-slate-800">Administrator Console</h2>
-                        <p class="text-slate-500 text-sm mt-2">Manage school systems, staff assignments, and global assessment configurations.</p>
-                      </div>`;
+                h += `<div class="glass col-span-2 flex flex-col justify-center">
+                    <h2 class="text-3xl font-black italic text-blue-600">Sovereign ERP v3.0</h2>
+                    <p class="text-slate-500">System is active for the ${config.year} academic cycle. Welcome, ${me.name}.</p>
+                </div>`;
             }
             h += `</div>`;
             document.getElementById('portal-content').innerHTML = h;
         }
 
-        // --- Academic Mark Entry (Teacher Specific) ---
+        async function updateSelfPIN() {
+            const newPin = document.getElementById('self-pin').value;
+            if(!/^\d{4}$/.test(newPin)) return alert("PIN must be exactly 4 digits.");
+            await db.collection("users").doc(me.id).update({ password: newPin });
+            alert("Security PIN updated.");
+        }
+
+        async function resetUserPIN(id, role) {
+            const def = (role === 'learner') ? "1234" : "0000";
+            if(confirm(`Reset PIN for ${id} to default (${def})?`)) {
+                await db.collection("users").doc(id).update({ password: def });
+                alert("PIN Reset Successful.");
+            }
+        }
+
+        async function uiRegistry() {
+            document.getElementById('portal-title').innerText = "Registry";
+            const snap = await db.collection("users").get();
+            let h = `<div class="glass overflow-x-auto"><table class="w-full text-left text-xs">
+                <thead><tr class="bg-slate-50"><th class="p-4">ID</th><th>Name</th><th>Role/Class</th><th>Actions</th></tr></thead><tbody>`;
+            
+            snap.forEach(doc => {
+                if(doc.id === 'admin') return; // Admin hide policy
+                const d = doc.data();
+                h += `<tr class="border-b">
+                    <td class="p-4 font-bold uppercase">${doc.id}</td>
+                    <td>${d.name}</td>
+                    <td><span class="tag">${d.role === 'learner' ? d.class : d.role}</span></td>
+                    <td class="p-2 space-x-2">
+                        <button onclick="editRegistry('${doc.id}')" class="text-blue-600 font-bold underline">Manage</button>
+                        <button onclick="resetUserPIN('${doc.id}', '${d.role}')" class="text-orange-500 font-bold underline">Reset PIN</button>
+                        <button onclick="deleteU('${doc.id}')" class="text-red-500 underline">Delete</button>
+                    </td>
+                </tr>`;
+            });
+            document.getElementById('portal-content').innerHTML = h + `</tbody></table></div>`;
+        }
+
+        async function genReport() {
+            const id = document.getElementById('r-lin').value.trim().toLowerCase();
+            const uDoc = await db.collection("users").doc(id).get();
+            if(!uDoc.exists) return alert("Learner record not found.");
+            const s = uDoc.data();
+            
+            if(s.balance > 0) return alert("Financial Block: Please clear balance of UGX " + s.balance);
+
+            const marksSnap = await db.collection("marks")
+                .where("studentId", "==", id)
+                .where("year", "==", config.year)
+                .where("term", "==", config.term).get();
+            
+            // --- Competition / Ranking Logic ---
+            const classMates = await db.collection("users").where("class", "==", s.class).get();
+            let leaderBoard = [];
+            
+            for (let classmate of classMates.docs) {
+                const cData = classmate.data();
+                const cId = classmate.id;
+                const cMarks = await db.collection("marks")
+                    .where("studentId", "==", cId)
+                    .where("year", "==", config.year)
+                    .where("term", "==", config.term).get();
+                
+                let sum = 0;
+                cMarks.forEach(m => sum += m.data().score);
+                const avg = sum / (cData.enrolledSubjects?.length || 1);
+                leaderBoard.push({ id: cId, avg: avg });
+            }
+            leaderBoard.sort((a,b) => b.avg - a.avg);
+            const rank = leaderBoard.findIndex(x => x.id === id) + 1;
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const pW = doc.internal.pageSize.getWidth();
+            
+            // PDF Visual Header
+            if(config.badge) doc.addImage(config.badge, 'PNG', pW/2 - 15, 10, 30, 30);
+            doc.setFontSize(22).setFont(undefined, 'bold').text("AWERE SECONDARY SCHOOL", pW/2, 50, {align:'center'});
+            doc.setFontSize(10).text(`ACADEMIC PROGRESS REPORT • ${config.term.toUpperCase()} ${config.year}`, pW/2, 58, {align:'center'});
+            
+            doc.setFontSize(11).text(`STUDENT: ${s.name.toUpperCase()}`, 20, 75);
+            doc.text(`LIN: ${id.toUpperCase()}`, 20, 81);
+            doc.text(`CLASS: ${s.class}`, 140, 75);
+            doc.text(`RANK: ${rank} of ${leaderBoard.length}`, 140, 81);
+
+            let rows = [];
+            let totalPossible = s.enrolledSubjects?.length || 1;
+            let currentTotal = 0;
+
+            marksSnap.forEach(m => {
+                const d = m.data();
+                currentTotal += d.score;
+                let grade, achievement;
+                
+                if (config.mode === "AoI") {
+                    const res = getAoIDescriptor(d.score);
+                    grade = `L${res.l}`;
+                    achievement = res.d;
+                } else {
+                    const res = getSummativeGrade(d.score);
+                    grade = res.g;
+                    achievement = res.r;
+                }
+                rows.push([d.subject, d.score, grade, achievement, d.teacher]);
+            });
+
+            doc.autoTable({
+                startY: 88,
+                head: [['Subject', 'Score', 'Grade', 'Achievement', 'Teacher']],
+                body: rows,
+                theme: 'striped',
+                headStyles: { fillColor: [37, 99, 235] }
+            });
+
+            const finalY = doc.lastAutoTable.finalY + 15;
+            const average = (currentTotal / totalPossible).toFixed(1);
+            
+            doc.setFont(undefined, 'bold').text(`TERM AVERAGE: ${average}`, 20, finalY);
+            doc.text(`HEADTEACHER'S REMARK: _________________________________________`, 20, finalY + 10);
+            
+            if(config.signature) doc.addImage(config.signature, 'PNG', 20, finalY + 15, 30, 15);
+            if(config.stamp) doc.addImage(config.stamp, 'PNG', 150, finalY + 5, 25, 25);
+            
+            doc.save(`Report_${id}_${config.term}.pdf`);
+        }
+
+        // --- Shared Boilerplate Functions ---
+        function uiEnrollment() {
+            document.getElementById('portal-title').innerText = "Registration";
+            let subCheckboxes = SUBJECTS.map(s => `<label class="flex items-center gap-2 text-[10px] font-bold"><input type="checkbox" name="reg-subs" value="${s}" class="w-4 h-4"> ${s}</label>`).join('');
+            document.getElementById('portal-content').innerHTML = `
+                <div class="glass max-w-2xl mx-auto">
+                    <h3 class="font-black mb-6">User Registration</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <input id="reg-id" placeholder="ID / LIN">
+                        <input id="reg-name" placeholder="Full Name">
+                        <select id="reg-role" onchange="toggleRegConfig()"><option value="learner">Learner</option><option value="teacher">Teacher</option><option value="bursar">Bursar</option><option value="dos">DOS</option></select>
+                        <input id="reg-pw" placeholder="PIN" type="text" maxlength="4">
+                    </div>
+                    <div id="learner-only">
+                        <label class="text-[10px] font-black uppercase">Class</label>
+                        <select id="reg-class">${CLASSES.map(c => `<option value="${c}">${c}</option>`).join('')}</select>
+                        <label class="text-[10px] font-black uppercase block mb-3">Subjects</label>
+                        <div class="subject-grid bg-slate-50 p-4 rounded-xl mb-4">${subCheckboxes}</div>
+                    </div>
+                    <button onclick="processReg()" class="btn-primary w-full">Save Record</button>
+                </div>`;
+        }
+
+        function toggleRegConfig() {
+            const role = document.getElementById('reg-role').value;
+            document.getElementById('learner-only').style.display = (role === 'learner') ? 'block' : 'none';
+            document.getElementById('reg-pw').value = (role === 'learner') ? '1234' : '0000';
+        }
+
+        async function processReg() {
+            const id = document.getElementById('reg-id').value.trim().toLowerCase();
+            const role = document.getElementById('reg-role').value;
+            const subs = Array.from(document.querySelectorAll('input[name="reg-subs"]:checked')).map(c => c.value);
+            const data = {
+                name: document.getElementById('reg-name').value,
+                password: document.getElementById('reg-pw').value,
+                role: role, balance: 0, totalFees: 0, assignments: []
+            };
+            if(role === 'learner') { data.class = document.getElementById('reg-class').value; data.enrolledSubjects = subs; }
+            await db.collection("users").doc(id).set(data);
+            alert("Registered."); uiEnrollment();
+        }
+
         async function uiMarks() {
             document.getElementById('portal-title').innerText = "Academic Entry";
             const myAss = (me.role === 'dev') ? CLASSES.map(c => ({class:c, subject:'Mathematics'})) : (me.assignments || []);
-            
-            if(myAss.length === 0) {
-                document.getElementById('portal-content').innerHTML = `<div class="glass text-center py-20 text-slate-400">You are not assigned to any classes. Contact DOS.</div>`;
-                return;
-            }
-
             document.getElementById('portal-content').innerHTML = `
-                <div class="glass flex flex-col md:flex-row gap-4">
-                    <select id="m-select" class="mb-0">${myAss.map(a => `<option value="${a.class}|${a.subject}">${a.class} • ${a.subject}</option>`).join('')}</select>
-                    <button onclick="loadMarkSheet()" class="btn-primary whitespace-nowrap">Load Mark Sheet</button>
+                <div class="glass flex gap-4">
+                    <select id="m-select" class="mb-0">${myAss.map(a => `<option value="${a.class}|${a.subject}">${a.class} - ${a.subject}</option>`).join('')}</select>
+                    <button onclick="loadMarkSheet()" class="btn-primary">Load Class</button>
                 </div>
                 <div id="marks-sheet" class="glass hidden overflow-x-auto"></div>`;
         }
@@ -217,319 +383,40 @@
         async function loadMarkSheet() {
             const [cls, sub] = document.getElementById('m-select').value.split('|');
             const snap = await db.collection("users").where("class", "==", cls).where("enrolledSubjects", "array-contains", sub).get();
-            const isAoI = config.mode === "AoI";
-            const rangeHint = isAoI ? "0.9 - 3.0" : "0 - 100";
-
-            let h = `<div class="flex justify-between items-center mb-6">
-                        <div>
-                            <h4 class="font-black text-lg">${sub} - ${cls}</h4>
-                            <span class="tag">${config.mode} Mode</span>
-                        </div>
-                        <p class="text-[10px] font-black text-slate-400">SCORE RANGE: ${rangeHint}</p>
-                    </div>
-                <table class="w-full text-left text-sm">
-                <thead><tr class="bg-slate-50 border-y border-slate-100"><th class="p-4">Learner Name / ID</th><th class="w-32">Score</th><th>Competency / Remark</th></tr></thead><tbody>`;
-            
+            let h = `<h4 class="font-black mb-4">Entering: ${sub} (${cls})</h4><table class="w-full text-sm">
+                <thead><tr class="bg-slate-50"><th class="p-4">Learner</th><th>Score</th><th>Remark</th></tr></thead><tbody>`;
             snap.forEach(doc => {
-                h += `<tr class="border-b border-slate-50">
-                    <td class="p-4"><p class="font-bold text-slate-800">${doc.data().name}</p><p class="text-[9px] text-slate-400 uppercase">${doc.id}</p></td>
-                    <td><input type="number" step="0.1" class="m-input !mb-0" data-id="${doc.id}" placeholder="Score"></td>
-                    <td><input type="text" class="m-comment !mb-0" data-id="${doc.id}" placeholder="Enter specific competency observation..."></td></tr>`;
+                h += `<tr class="border-b"><td class="p-4 font-bold">${doc.data().name}</td>
+                    <td><input type="number" step="0.1" class="m-input" data-id="${doc.id}"></td>
+                    <td><input type="text" class="m-comment" data-id="${doc.id}"></td></tr>`;
             });
-            h += `</tbody></table><button onclick="saveMarks('${cls}','${sub}')" class="btn-primary w-full mt-8">Upload Results to Database</button>`;
+            h += `</tbody></table><button onclick="saveMarks('${cls}','${sub}')" class="btn-primary w-full mt-6">Publish Results</button>`;
             document.getElementById('marks-sheet').innerHTML = h;
             document.getElementById('marks-sheet').classList.remove('hidden');
         }
 
         async function saveMarks(cls, sub) {
-            const isAoI = config.mode === "AoI";
             const batch = db.batch();
-            let valid = true;
-
-            document.querySelectorAll('.m-input').forEach(input => {
-                const score = parseFloat(input.value);
-                if(!isNaN(score)) {
-                    if(isAoI && (score < 0.9 || score > 3.0)) { alert(`AoI Error: ${score} is out of range (0.9-3.0)`); valid = false; }
-                    if(!isAoI && (score < 0 || score > 100)) { alert(`Summative Error: ${score}% is out of range (0-100)`); valid = false; }
-                }
-            });
-
-            if(!valid) return;
-
             document.querySelectorAll('.m-input').forEach(input => {
                 const sid = input.getAttribute('data-id');
                 const score = parseFloat(input.value);
                 const comm = document.querySelector(`.m-comment[data-id="${sid}"]`).value;
                 if(!isNaN(score)) {
                     const ref = db.collection("marks").doc(`${sid}_${config.year}_${config.term}_${sub.replace(/\s/g, '')}`);
-                    batch.set(ref, { 
-                        studentId: sid, class: cls, subject: sub, score, 
-                        comment: comm || "Completed", year: config.year, term: config.term, teacher: me.name 
-                    });
+                    batch.set(ref, { studentId: sid, class: cls, subject: sub, score, comment: comm || "Completed", year: config.year, term: config.term, teacher: me.name });
                 }
             });
-            await batch.commit(); alert("Marks synchronized successfully.");
+            await batch.commit(); alert("Marks Published.");
         }
 
-        // --- Settings & Global Assessment Toggle ---
-        function uiSettings() {
-            document.getElementById('portal-title').innerText = "ERP Settings";
-            const isAoI = config.mode === "AoI";
-
-            document.getElementById('portal-content').innerHTML = `
-                <div class="glass max-w-xl mx-auto">
-                    <div class="flex items-center justify-between mb-8 p-6 bg-blue-50 rounded-[2rem] border border-blue-100">
-                        <div>
-                            <p class="text-xs font-black text-blue-800 uppercase tracking-widest">Global Assessment Mode</p>
-                            <p class="text-sm text-blue-600 mt-1">${isAoI ? 'New Lower Secondary (AoI 0.9-3)' : 'Traditional Summative (0-100%)'}</p>
-                        </div>
-                        <label class="switch">
-                            <input type="checkbox" id="mode-toggle" ${isAoI ? 'checked' : ''}>
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Active Term</label>
-                            <select id="set-term"><option ${config.term==='Term 1'?'selected':''}>Term 1</option><option ${config.term==='Term 2'?'selected':''}>Term 2</option><option ${config.term==='Term 3'?'selected':''}>Term 3</option></select>
-                        </div>
-                        <div>
-                            <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Active Year</label>
-                            <input id="set-year" value="${config.year}">
-                        </div>
-                    </div>
-                    
-                    <label class="text-[10px] font-black uppercase text-slate-400 ml-2">School Badge (Square PNG URL)</label>
-                    <input id="set-badge" value="${config.badge || ''}">
-                    
-                    <button onclick="saveGlobal()" class="btn-primary w-full mt-4">Save Configuration</button>
-                </div>`;
-        }
-
-        async function saveGlobal() {
-            const mode = document.getElementById('mode-toggle').checked ? "AoI" : "Summative";
-            const data = { 
-                term: document.getElementById('set-term').value, 
-                year: document.getElementById('set-year').value, 
-                badge: document.getElementById('set-badge').value,
-                mode: mode, stamp: config.stamp, signature: config.signature
-            };
-            await db.collection("settings").doc("global").set(data);
-            location.reload();
-        }
-
-        // --- Report Card Generation with Legal Footer ---
-        function uiReports() {
-            document.getElementById('portal-title').innerText = "Document Hub";
-            document.getElementById('portal-content').innerHTML = `
-                <div class="glass max-w-md mx-auto text-center">
-                    <div class="mb-6">
-                        <h4 class="font-black text-slate-800">Academic Progress Report</h4>
-                        <p class="text-xs text-slate-400 mt-1">Generate official ${config.year} ${config.term} documents.</p>
-                    </div>
-                    <input id="r-lin" placeholder="Student LIN" value="${me.role === 'learner' ? me.id : ''}" ${me.role === 'learner' ? 'disabled' : ''}>
-                    <button onclick="genReport()" class="btn-primary w-full">Download PDF Report</button>
-                </div>`;
-        }
-
-        async function genReport() {
-            const id = document.getElementById('r-lin').value.trim().toLowerCase();
-            const uDoc = await db.collection("users").doc(id).get();
-            if(!uDoc.exists) return alert("Student record not found.");
-            
-            const s = uDoc.data();
-            // Block report if fees are pending (Except for Admin/Dev)
-            if(s.balance > 0 && me.role !== 'dev') return alert(`Access Denied: Please clear outstanding balance of UGX ${s.balance.toLocaleString()} to view results.`);
-
-            const marks = await db.collection("marks").where("studentId", "==", id).where("year", "==", config.year).where("term", "==", config.term).get();
-            
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            const pW = doc.internal.pageSize.getWidth();
-            const pH = doc.internal.pageSize.getHeight();
-
-            // Header
-            if(config.badge) doc.addImage(config.badge, 'PNG', pW/2 - 15, 10, 30, 30);
-            doc.setFontSize(18); doc.setTextColor(30, 41, 59);
-            doc.text("AWERE SECONDARY SCHOOL", pW/2, 50, {align:'center'});
-            doc.setFontSize(10); doc.setFont(undefined, 'bold');
-            doc.text(`OFFICIAL PROGRESS REPORT (${config.mode}): ${config.term} ${config.year}`, pW/2, 58, {align:'center'});
-            
-            // Student Profile
-            doc.setFontSize(9); doc.setFont(undefined, 'normal');
-            doc.text(`NAME: ${s.name.toUpperCase()}`, 20, 70); 
-            doc.text(`LIN: ${id.toUpperCase()}`, 20, 75);
-            doc.text(`CLASS: ${s.class}`, 150, 70);
-
-            // Marks Table
-            let rows = [];
-            marks.forEach(m => { 
-                const d = m.data(); 
-                const scoreFormatted = config.mode === "AoI" ? d.score.toFixed(1) : d.score;
-                rows.push([d.subject, scoreFormatted, d.comment, d.teacher]); 
-            });
-            doc.autoTable({ 
-                startY: 80, 
-                head: [['Subject', 'Score', 'Competency Remark', 'Teacher']], 
-                body: rows,
-                headStyles: { fillColor: [30, 41, 59] },
-                styles: { fontSize: 8 }
-            });
-
-            // Authentication
-            const finalY = doc.lastAutoTable.finalY + 20;
-            doc.text("Class Teacher's Signature: __________________", 20, finalY);
-            doc.text("Headteacher's Signature & Stamp:", 120, finalY);
-            
-            if(config.signature) doc.addImage(config.signature, 'PNG', 130, finalY - 10, 30, 15);
-            if(config.stamp) doc.addImage(config.stamp, 'PNG', 160, finalY - 15, 25, 25);
-
-            // Legal Footer
-            doc.setFontSize(7);
-            doc.setTextColor(150);
-            doc.setFont(undefined, 'italic');
-            doc.text("This report card is invalid without an authentic school stamp and signature.", pW/2, pH - 15, {align:'center'});
-            doc.text(`System Generated via Sovereign ERP v3.0 | Date: ${new Date().toLocaleDateString()}`, pW/2, pH - 10, {align:'center'});
-
-            doc.save(`Report_${s.name}_${config.term}.pdf`);
-        }
-
-        // --- Standard Management Functions (Unchanged) ---
-        function uiEnrollment() {
-            document.getElementById('portal-title').innerText = "Registration";
-            let subCheckboxes = SUBJECTS.map(s => `
-                <label class="flex items-center gap-2 text-[10px] font-bold">
-                    <input type="checkbox" name="reg-subs" value="${s}" class="w-4 h-4"> ${s}
-                </label>`).join('');
-
-            document.getElementById('portal-content').innerHTML = `
-                <div class="glass max-w-2xl mx-auto">
-                    <h3 class="font-black mb-6">User Enrollment</h3>
-                    <div class="grid grid-cols-2 gap-4">
-                        <input id="reg-id" placeholder="ID / LIN">
-                        <input id="reg-name" placeholder="Full Name">
-                        <select id="reg-role" onchange="updateDefaultPINHint()">
-                            <option value="learner">Learner</option>
-                            <option value="teacher">Teacher</option>
-                            <option value="dos">DOS</option>
-                            <option value="bursar">Bursar</option>
-                            <option value="headteacher">Headteacher</option>
-                        </select>
-                        <div class="relative">
-                           <input id="reg-pw" placeholder="Security PIN" type="text" maxlength="4">
-                           <p id="pin-hint" class="absolute -bottom-1 left-1 text-[8px] font-bold text-blue-500 uppercase"></p>
-                        </div>
-                    </div>
-                    <div id="learner-config">
-                        <label class="text-[10px] font-black uppercase">Assign Class</label>
-                        <select id="reg-class">${CLASSES.map(c => `<option value="${c}">${c}</option>`).join('')}</select>
-                        <label class="text-[10px] font-black uppercase block mb-3">Course Enrollment</label>
-                        <div class="subject-grid bg-slate-50 p-4 rounded-xl mb-4">${subCheckboxes}</div>
-                    </div>
-                    <button onclick="processReg()" class="btn-primary w-full">Register User Record</button>
-                </div>`;
-            updateDefaultPINHint();
-        }
-
-        function updateDefaultPINHint() {
-            const role = document.getElementById('reg-role').value;
-            const pinField = document.getElementById('reg-pw');
-            const hint = document.getElementById('pin-hint');
-            const learnerConfig = document.getElementById('learner-config');
-            if(role === 'learner') { pinField.value = "1234"; hint.innerText = "Default: 1234"; learnerConfig.style.display = 'block'; } 
-            else { pinField.value = "0000"; hint.innerText = "Default: 0000"; learnerConfig.style.display = 'none'; }
-        }
-
-        async function processReg() {
-            const id = document.getElementById('reg-id').value.trim().toLowerCase();
-            const role = document.getElementById('reg-role').value;
-            const pin = document.getElementById('reg-pw').value;
-            const subs = Array.from(document.querySelectorAll('input[name="reg-subs"]:checked')).map(c => c.value);
-            if(!/^\d{4}$/.test(pin)) return alert("PIN must be 4 digits.");
-            const userData = {
-                name: document.getElementById('reg-name').value, password: pin, role: role,
-                balance: 0, totalFees: 0, assignments: [] 
-            };
-            if(role === 'learner') { userData.class = document.getElementById('reg-class').value; userData.enrolledSubjects = subs; }
-            await db.collection("users").doc(id).set(userData);
-            alert("Record Saved."); uiEnrollment();
-        }
-
-        async function uiRegistry() {
-            document.getElementById('portal-title').innerText = "System Registry";
-            const snap = await db.collection("users").get();
-            let h = `<div class="glass overflow-x-auto"><table class="w-full text-left text-xs">
-                <thead><tr class="bg-slate-50 border-y"><th class="p-4">ID</th><th>Name</th><th>Role</th><th>Actions</th></tr></thead><tbody>`;
-            snap.forEach(doc => {
-                const d = doc.data();
-                h += `<tr class="border-b"><td class="p-4 font-bold uppercase">${doc.id}</td><td>${d.name}</td><td><span class="tag">${d.role}</span></td>
-                    <td class="flex gap-4 p-2">
-                        <button onclick="editRegistry('${doc.id}')" class="text-blue-600 font-bold hover:underline">Assign Load</button>
-                        <button onclick="deleteU('${doc.id}')" class="text-red-500 hover:underline">Delete</button>
-                    </td></tr>`;
-            });
-            document.getElementById('portal-content').innerHTML = h + `</tbody></table></div>`;
-        }
-
-        async function editRegistry(id) {
-            const doc = await db.collection("users").doc(id).get();
-            const d = doc.data();
-            let h = `<div class="glass max-w-lg mx-auto">
-                <h3 class="font-black mb-4">Assign Academic Workload: ${d.name}</h3>
-                <label class="text-[10px] font-bold">Display Name</label><input id="e-name" value="${d.name}">
-                <label class="text-[10px] font-bold">Access PIN</label><input id="e-pw" value="${d.password}" maxlength="4">`;
-            
-            if(d.role === 'teacher') {
-                h += `<div class="border-t pt-4 mt-2">
-                    <p class="text-[10px] font-black uppercase mb-2">Assign Class & Subject</p>
-                    <div class="flex gap-2">
-                        <select id="ass-cls">${CLASSES.map(c => `<option>${c}</option>`).join('')}</select>
-                        <select id="ass-sub">${SUBJECTS.map(s => `<option>${s}</option>`).join('')}</select>
-                        <button onclick="addTeacherAss('${id}')" class="btn-primary !py-2 !px-4 text-xs">Add</button>
-                    </div>
-                    <div class="flex flex-wrap mt-4 gap-2">${(d.assignments || []).map((a, i) => `<span class="bg-slate-100 p-2 rounded-lg text-[9px] font-bold">${a.class}: ${a.subject} <b class="text-red-500 cursor-pointer ml-1" onclick="remAss('${id}', ${i})">×</b></span>`).join('')}</div>
-                </div>`;
-            }
-            h += `<button onclick="saveRegistryChanges('${id}')" class="btn-primary w-full mt-6">Update Faculty Record</button></div>`;
-            document.getElementById('portal-content').innerHTML = h;
-        }
-
-        async function saveRegistryChanges(id) {
-            const name = document.getElementById('e-name').value;
-            const pw = document.getElementById('e-pw').value;
-            await db.collection("users").doc(id).update({ name, password: pw });
-            alert("Updated."); uiRegistry();
-        }
-
-        async function addTeacherAss(id) {
-            const cls = document.getElementById('ass-cls').value;
-            const sub = document.getElementById('ass-sub').value;
-            const ref = db.collection("users").doc(id);
-            const d = (await ref.get()).data();
-            const ass = d.assignments || [];
-            ass.push({class: cls, subject: sub});
-            await ref.update({ assignments: ass });
-            editRegistry(id);
-        }
-        async function remAss(id, idx) {
-            const ref = db.collection("users").doc(id);
-            const d = (await ref.get()).data();
-            d.assignments.splice(idx, 1);
-            await ref.update({ assignments: d.assignments });
-            editRegistry(id);
-        }
-        async function deleteU(id) { if(confirm("Erase user permanently?")) { await db.collection("users").doc(id).delete(); uiRegistry(); } }
-
-        async function uiBursar() {
+        function uiBursar() {
             document.getElementById('portal-title').innerText = "Bursar Desk";
             document.getElementById('portal-content').innerHTML = `
                 <div class="glass max-w-md mx-auto">
-                    <h4 class="font-black mb-4">Student Financial Update</h4>
-                    <input id="b-lin" placeholder="Student LIN">
-                    <select id="b-action"><option value="pay">Record Installment</option><option value="set">Set Term Fees (Total)</option></select>
+                    <input id="b-lin" placeholder="Learner LIN">
+                    <select id="b-action"><option value="pay">Fee Payment</option><option value="set">Set Total Fees</option></select>
                     <input id="b-amt" type="number" placeholder="Amount (UGX)">
-                    <button onclick="processFin()" class="btn-primary w-full">Sync Financials</button>
+                    <button onclick="processFin()" class="btn-primary w-full">Update Record</button>
                 </div>`;
         }
 
@@ -539,11 +426,52 @@
             const act = document.getElementById('b-action').value;
             const ref = db.collection("users").doc(id);
             const doc = await ref.get();
-            if(!doc.exists) return alert("Student not found.");
+            if(!doc.exists) return alert("Learner not found");
             if(act === 'set') { await ref.update({ totalFees: amt, balance: amt }); }
             else { await ref.update({ balance: (doc.data().balance || 0) - amt }); }
-            alert("Finance updated.");
+            alert("Financial record updated.");
         }
+
+        function uiReports() {
+            document.getElementById('portal-title').innerText = "Report Hub";
+            document.getElementById('portal-content').innerHTML = `<div class="glass max-w-md mx-auto text-center">
+                <p class="text-[10px] font-bold text-slate-400 mb-4 uppercase">Sovereign Progress Report Generation</p>
+                <input id="r-lin" placeholder="Enter LIN" value="${me.role === 'learner' ? me.id : ''}" ${me.role === 'learner' ? 'disabled' : ''}>
+                <button onclick="genReport()" class="btn-primary w-full">Generate & Download PDF</button>
+            </div>`;
+        }
+
+        function uiSettings() {
+            document.getElementById('portal-title').innerText = "ERP Settings";
+            document.getElementById('portal-content').innerHTML = `
+                <div class="glass max-w-md mx-auto">
+                    <div class="flex items-center justify-between mb-6 p-4 bg-slate-50 rounded-2xl">
+                        <div><p class="text-xs font-bold uppercase">Assessment Mode</p><p class="text-[10px] text-slate-500">${config.mode}</p></div>
+                        <label class="switch"><input type="checkbox" id="mode-toggle" ${config.mode==='AoI'?'checked':''}> <span class="slider"></span></label>
+                    </div>
+                    <label class="text-[10px] font-black uppercase">Active Term</label>
+                    <select id="set-term"><option ${config.term==='Term 1'?'selected':''}>Term 1</option><option ${config.term==='Term 2'?'selected':''}>Term 2</option><option ${config.term==='Term 3'?'selected':''}>Term 3</option></select>
+                    <label class="text-[10px] font-black uppercase">Active Year</label>
+                    <input id="set-year" value="${config.year}">
+                    <label class="text-[10px] font-black uppercase">Badge URL</label>
+                    <input id="set-badge" value="${config.badge || ''}">
+                    <button onclick="saveGlobal()" class="btn-primary w-full">Update System</button>
+                </div>`;
+        }
+
+        async function saveGlobal() {
+            const data = { 
+                term: document.getElementById('set-term').value, 
+                year: document.getElementById('set-year').value, 
+                badge: document.getElementById('set-badge').value,
+                mode: document.getElementById('mode-toggle').checked ? "AoI" : "Summative",
+                stamp: config.stamp || "", signature: config.signature || ""
+            };
+            await db.collection("settings").doc("global").set(data);
+            location.reload();
+        }
+
+        async function deleteU(id) { if(confirm("Permanently erase user?")) { await db.collection("users").doc(id).delete(); uiRegistry(); } }
     </script>
 </body>
 </html>
