@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Awere SS |Electronic Report Card Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f1f5f9; color: #0f172a; }
+        .glass { background: white; border: 1px solid #e2e8f0; border-radius: 24px; padding: 24px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.04); }
+        .btn-primary { @apply bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-700 active:scale-95 transition-all shadow-lg shadow-indigo-200; }
+        .sidebar-item { @apply w-full text-left p-4 font-bold text-sm rounded-2xl hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center gap-3 mb-2; }
+        input, select { @apply bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500 text-sm w-full mb-3; }
+        .tag { @apply inline-block bg-indigo-100 text-indigo-700 text-[10px] px-3 py-1 rounded-full mr-1 mb-1 font-extrabold uppercase; }
+        .subject-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+    <div id="login-view" class="fixed inset-0 z-[999] flex items-center justify-center bg-indigo-950 px-6">
+        <div class="w-full max-w-md bg-white p-10 rounded-[3rem] shadow-2xl">
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-black italic text-indigo-900 uppercase tracking-tighter">Awere SS</h1>
+                <p class="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-1">ACADEMIC MANAGEMENT SYSTEM</p>
+            </div>
+            <label class="text-[10px] font-bold text-slate-500 ml-2">ACCESS ID / LIN</label>
+            <input type="text" id="u-id" placeholder="Enter LIN or Staff ID">
+            <label class="text-[10px] font-bold text-slate-500 ml-2">SECURITY PIN</label>
+            <input type="password" id="u-pw" placeholder="••••">
+            <button onclick="handleLogin()" class="btn-primary w-full mt-6 py-4">Initialize Access</button>
+            <p id="auth-err" class="text-red-500 text-[10px] mt-4 text-center font-bold uppercase"></p>
+        </div>
+    </div>
+
+    <div id="portal-view" style="display: none;" class="min-h-screen flex flex-col lg:flex-row">
+        <aside class="w-full lg:w-80 bg-white border-r border-slate-100 p-8 flex flex-col">
+            <div class="mb-12">
+                <div class="text-2xl font-black italic text-indigo-600 tracking-tighter">AWERE SS</div>
+                <div class="text-[9px] text-slate-400 font-black uppercase tracking-[0.2em]">Management 2026</div>
+            </div>
+            
+            <nav id="sidebar-nav" class="flex-1"></nav>
+
+            <div class="mt-8 pt-8 border-t border-slate-100">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold" id="user-avatar">?</div>
+                    <div>
+                        <p id="user-display" class="font-black text-sm text-slate-900 leading-tight"></p>
+                        <p id="role-display" class="text-[9px] text-indigo-500 font-black uppercase"></p>
+                    </div>
+                </div>
+                <button onclick="location.reload()" class="w-full mt-6 py-2 text-xs font-bold text-red-500 border border-red-100 rounded-xl hover:bg-red-50 transition-all">Terminate Session</button>
+            </div>
+        </aside>
+
+        <main class="flex-1 p-6 lg:p-16 overflow-y-auto">
+            <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-4">
+                <div>
+                    <h2 id="portal-title" class="text-4xl font-black tracking-tight text-slate-900">Dashboard</h2>
+                    <p id="breadcrumb" class="text-xs text-slate-400 font-bold uppercase mt-1">Home / Overview</p>
+                </div>
+                <div id="global-tag" class="bg-slate-900 text-white px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase shadow-xl shadow-slate-200"></div>
+            </header>
+
+            <div id="portal-content" class="space-y-8 animate-in fade-in duration-500"></div>
+        </main>
+    </div>
+
+    <script>
+        const SUBJECTS = ["English language", "Mathematics", "Physics", "Chemistry", "Biology", "Geography", "History", "Chrisian Religious Educ.", "History & Political Educ.", "Information and Communication Tech. ", "Technology and Drawing", "Entrepreneurship", "Economics", "Sub-Maths", "Sub- ICT", "General Paper", "Agriculture", "Kiswahili", "Acholi"];
+        const CLASSES = ["S1", "S2", "S3", "S4", "S5", "S6"];
+        
+        const firebaseConfig = { 
+            apiKey: "AIzaSyDUoYRjlHxBg3-ddFtsk2tGXAn9X46moHc", 
+            authDomain: "awere-erp.firebaseapp.com", 
+            projectId: "awere-erp", 
+            storageBucket: "awere-erp.firebasestorage.app", 
+            messagingSenderId: "139972783523", 
+            appId: "1:139972783523:web:f9591d033305bfabbe7e16" 
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        let me = null;
+        let config = { term: "Term 1", year: "2026", mode: "Summative", badge: "", stamp: "", signature: "" };
+
+        async function init() {
+            const s = await db.collection("settings").doc("global").get();
+            if(s.exists) config = s.data();
+            document.getElementById('global-tag').innerText = `${config.year} • ${config.term} • ${config.mode}`;
+        }
+        init();
+        function getGrade (score) {
+            if (config.mode === 'AoI') {
+                if ( score>=2.5) return "A";
+                if ( score >=1.5) return "B";
+                return "C";
+            } else {
+                if ( score >= 80) return "A"; if ( score >= 70) return "B"; if ( score >= 60) return "C"; if ( score >= 40) return "D"; return "E";
+            }
+        }
+        function getLOA ( score) {
+            if (config.mode === 'AoI') {
+                if (score >= 2.5) return "Level 3";
+                if (score >= 1.5) return "Level 2";
+                return "Level 1";
+            } else {
+                if (score >= 80) return "Exceptional";
+                if (score >= 70) return "Outstanding";
+                if (score >= 60) return "Satisfactory";
+                if (score >= 40) return "Basic";
+                return "Elementary";
+            }
+        }
+        function getDescriptor (score) {
+            if (config.mode === 'AoI') {
+                if (score>= 2.5) return "Outstanding";
+                if (score>= 1.5) return "Moderate";
+                return "Basic";
+            } else {
+                if (score>= 80) return "Exceptional";
+                if (score>= 70) return "Outstanding";
+                if (score>= 60) return "Satisfactory";
+                if (score>= 40) return "Basic";
+                return "Elementary";
+            }
+        }
+
+        async function handleLogin() {
+            const id = document.getElementById('u-id').value.trim().toLowerCase();
+            const pw = document.getElementById('u-pw').value.trim();
+            
+            if (id === "admin" && pw === "1995") { 
+                me = { name: "Olica Admin", role: "dev", id: "admin", assignments: [] }; 
+                launch(); return; 
+            }
+            
+            const doc = await db.collection("users").doc(id).get();
+            if (doc.exists && doc.data().password == pw) { 
+                me = { ...doc.data(), id: doc.id }; 
+                launch(); 
+            } else { 
+                document.getElementById('auth-err').innerText = "INVALID ACCESS ID OR PIN"; 
+            }
+        }
+
+        function launch() {
+            document.getElementById('login-view').style.display = 'none';
+            document.getElementById('portal-view').style.display = 'flex';
+            document.getElementById('user-display').innerText = me.name;
+            document.getElementById('role-display').innerText = me.role;
+            document.getElementById('user-avatar').innerText = me.name[0];
+            renderNav(); 
+            uiHome();
+        }
+
+        function renderNav() {
+            const nav = document.getElementById('sidebar-nav');
+            const isAdmin = ['dev', 'headteacher', 'dos'].includes(me.role);
+            let h = `<button onclick="uiHome()" class="sidebar-item">🏠 Dashboard</button>`;
+            
+            if (isAdmin) {
+                h += `<button onclick="uiEnrollment()" class="sidebar-item">👤 Registration</button>`;
+                h += `<button onclick="uiRegistry()" class="sidebar-item">🔍 Registry</button>`;
+                h += `<button onclick="uiSettings()" class="sidebar-item">⚙️ ERP Settings</button>`;
+            }
+            
+            if (me.role !== 'learner' && me.role !== 'bursar') h += `<button onclick="uiMarks()" class="sidebar-item">📝 Academic Entry</button>`;
+            if (['dev', 'bursar'].includes(me.role)) h += `<button onclick="uiBursar()" class="sidebar-item">💰 Bursar Desk</button>`;
+            
+            h += `<button onclick="uiReports()" class="sidebar-item">📄 Report Hub</button>`;
+            h += `<button onclick="uiProfile()" class="sidebar-item">🔒 Security PIN</button>`;
+            nav.innerHTML = h;
+        }
+
+        // --- UI SCREENS ---
+
+        function uiHome() {
+            document.getElementById('portal-title').innerText = "Dashboard";
+            document.getElementById('breadcrumb').innerText = "Home / Overview";
+            
+            let personalView = '';
+            if(me.role === 'learner') {
+                const subs = (me.enrolledSubjects || []).map(s => `<span class="tag">${s}</span>`).join('');
+                personalView = `
+                    <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-indigo-50 p-6 rounded-3xl border border-indigo-100">
+                            <p class="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-4">Financial Status</p>
+                            <h4 class="text-3xl font-black text-indigo-900">UGX ${(me.balance || 0).toLocaleString()}</h4>
+                            <p class="text-xs text-indigo-600 mt-2 font-bold">Current Outstanding Balance</p>
+                        </div>
+                        <div class="bg-slate-50 p-6 rounded-3xl border border-slate-100">
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">My Enrolled Subjects</p>
+                            <div class="flex flex-wrap">${subs || 'None'}</div>
+                        </div>
+                    </div>`;
+            } else if (me.role !== 'dev') {
+                const ass = (me.assignments || []).map(a => `<span class="tag">${a.class} - ${a.subject}</span>`).join('');
+                personalView = `
+                    <div class="mt-6 bg-slate-50 p-6 rounded-3xl border border-slate-100">
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Academic Assignments</p>
+                        <div class="flex flex-wrap">${ass || 'No classes assigned.'}</div>
+                    </div>`;
+            }
+
+            document.getElementById('portal-content').innerHTML = `
+                <div class="glass relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-8 text-slate-50 opacity-10 font-black text-9xl">AWERE</div>
+                    <h2 class="text-3xl font-black text-slate-900">Hello, ${me.name}</h2>
+                    <p class="text-slate-500 font-medium">Session: ${config.term} ${config.year} | Mode: ${config.mode}</p>
+                    ${personalView}
+                </div>`;
+        }
+
+        function uiProfile() {
+            document.getElementById('portal-title').innerText = "Security";
+            document.getElementById('breadcrumb').innerText = "Security / Change PIN";
+            document.getElementById('portal-content').innerHTML = `
+                <div class="glass max-w-md mx-auto">
+                    <p class="text-xs text-slate-500 mb-6 font-medium">For security, ensure your PIN is private. Default PINs should be changed immediately.</p>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-2">New Security PIN (4-Digits)</label>
+                    <input type="password" id="new-pin" maxlength="4" placeholder="••••">
+                    <button onclick="updatePin()" class="btn-primary w-full mt-4">Confirm New PIN</button>
+                </div>`;
+        }
+
+        async function updatePin() {
+            const pin = document.getElementById('new-pin').value;
+            if(pin.length < 4) return alert("PIN must be 4 digits.");
+            if(me.id === 'admin') return alert("System Developer PIN cannot be modified through the portal.");
+            
+            await db.collection("users").doc(me.id).update({ password: pin });
+            alert("Security PIN updated. Please remember it for your next login.");
+            me.password = pin;
+            uiHome();
+        }
+
+        async function uiReports() {
+            document.getElementById('portal-title').innerText = "Report Hub";
+            document.getElementById('breadcrumb').innerText = "Reports / Generator";
+            const isLearner = me.role === 'learner';
+            
+            document.getElementById('portal-content').innerHTML = `
+                <div class="glass max-w-md mx-auto text-center">
+                    <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <span class="text-2xl">📄</span>
+                    </div>
+                    <h3 class="font-black text-xl mb-2">Termly Report Card</h3>
+                    <p class="text-xs text-slate-400 mb-8 font-bold uppercase">Secured Verification System</p>
+                    
+                    <label class="text-left block text-[10px] font-bold text-slate-400 ml-2">STUDENT LIN</label>
+                    <input id="r-lin" placeholder="e.g., L26-001" value="${isLearner ? me.id : ''}" ${isLearner ? 'readonly' : ''} class="${isLearner?'bg-slate-100 cursor-not-allowed':''}">
+                    
+                    <button onclick="genReport()" class="btn-primary w-full mt-2">Generate PDF Document</button>
+                    <p class="text-[9px] text-slate-400 mt-6 font-bold uppercase">Finance Lock: ${isLearner ? 'Active for your account' : 'Bypassed for Staff'}</p>
+                </div>`;
+        }
+        function getDynamicComment(avg) {
+    avg = parseFloat(avg);
+
+    if (config.mode === 'AoI') {
+        if (avg >= 2.5) return "Excellent performance. Keep demonstrating mastery.";
+        if (avg >= 1.5) return "Good progress. Continue improving your competencies.";
+        return "Basic achievement. More effort is required next term.";
+    } else {
+        if (avg >= 80) return "Exceptional performance. Maintain this standard.";
+        if (avg >= 70) return "Very good performance. Keep pushing higher.";
+        if (avg >= 60) return "Satisfactory performance. There is room for improvement.";
+        if (avg >= 40) return "Basic performance. Work harder next term.";
+        return "Below expectations. Serious improvement required.";
+    }
+}
+        // FULLY RESTORED AND UPDATED genReport FUNCTION
+async function genReport() {
+    const id = document.getElementById('r-lin').value.toLowerCase();
+    const uDoc = await db.collection("users").doc(id).get();
+    if(!uDoc.exists) return alert("User Identity not found.");
+    const u = uDoc.data();
+
+    // Finance Lock Logic
+    if(me.role === 'learner' && u.balance > 0) {
+        return alert(`Access Denied: Clear balance of UGX ${u.balance.toLocaleString()} first.`);
+    }
+
+    // --- POSITIONING LOGIC ---
+    const classMarksSnap = await db.collection("marks")
+        .where("class", "==", u.class)
+        .where("year", "==", config.year)
+        .where("term", "==", config.term)
+        .get();
+
+    let studentTotals = {}; 
+    classMarksSnap.forEach(m => {
+        const d = m.data();
+        if (!studentTotals[d.studentId]) studentTotals[d.studentId] = { total: 0 };
+        studentTotals[d.studentId].total += d.score;
+    });
+
+    let leaderboard = Object.keys(studentTotals).map(sid => {
+        return { id: sid, total: studentTotals[sid].total };
+    });
+    leaderboard.sort((a, b) => b.total - a.total);
+    const position = leaderboard.findIndex(x => x.id === id) + 1;
+    const totalInClass = leaderboard.length;
+
+    // --- MARKS DATA ---
+    const marksSnap = await db.collection("marks").where("studentId", "==", id).where("year", "==", config.year).where("term", "==", config.term).get();
+    let marks = [];
+    marksSnap.forEach(m => marks.push(m.data()));
+    if(marks.length === 0) return alert("No marks available.");
+
+    const numSub = (u.enrolledSubjects || []).length || 1;
+    const totalScore = marks.reduce((a, b) => a + b.score, 0);
+    const myAvg = numSub > 0 ? (totalScore / numSub).toFixed(1) : 0;
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const pW = doc.internal.pageSize.getWidth();
+
+// Load School Badge Properly
+const img = new Image();
+img.src = "Awere.jpg";
+
+await new Promise((resolve, reject) => {
+    img.onload = resolve;
+    img.onerror = reject;
+});
+
+doc.addImage(img, "JPEG", pW/2 - 15, 10, 30, 30);
+    doc.setFontSize(20).setFont(undefined, 'bold').text("AWERE SECONDARY SCHOOL", pW/2, 48, {align:'center'});
+    doc.setFontSize(9).setFont(undefined, 'normal').text(`OFFICIAL ACADEMIC REPORT CARD | ${config.mode.toUpperCase()} ASSESSMENT`, pW/2, 54, {align:'center'});
+    doc.setFontSize(9).setFont(undefined, 'bold').text("P.O Box 244, GULU, OMORO DISTRICT  FAX: 0471-32003", pW/2, 60, {align: 'center'});
+    doc.setFontSize(9).setFont(undefined, 'bold').text("TELEPHONE: 0772969400/ 0782965491", pW/2, 66, {align: 'center'});
+
+    // --- LEARNER META DATA (GENDER RESTORED TO TOP) ---
+    const tableStartY = 75; // leave some space after header
+    doc.autoTable({
+        startY: tableStartY,
+        body: [
+            ['LEARNER:', u.name.toUpperCase(), 'GENDER:', (u.gender || 'N/A').toUpperCase()],
+            ['LIN:', id.toUpperCase(), 'CLASS:', u.class],
+            ['POSITION:', `${position} of ${totalInClass}`, 'TERM:', `${config.term} ${config.year}`]
+        ],
+        theme: 'plain', 
+        styles: { fontSize: 8.5, cellPadding: 1 },
+        columnStyles: { 0: { fontStyle: 'bold', width: 25 }, 2: { fontStyle: 'bold', width: 25 } }
+    });
+
+    // Subject Table (Subject | Score | Grade | LOA | Descriptor | Remark | Teacher)
+    let tableData = marks.map(m => [
+        m.subject.toUpperCase(), 
+        m.score, 
+        getGrade(m.score), 
+        getLOA(m.score), 
+        getDescriptor(m.score), 
+        m.comment || '-', 
+        m.teacher || 'STAFF'
+    ]);
+    
+    doc.autoTable({
+        startY: doc.lastAutoTable.finalY + 5,
+        head: [['SUBJECT', 'SCORE', 'GRADE', 'LOA', 'DESCRIPTOR', 'COMPETENCY REMARK', 'TEACHER']],
+        body: tableData,
+        theme: 'grid',
+        headStyles: { fillColor: [30, 41, 59], fontSize: 8, halign: 'center' },
+        styles: { fontSize: 7, halign: 'center', cellPadding: 2 },
+        columnStyles: { 0: { halign: 'left', fontStyle: 'bold', width: 35 }, 5: { halign: 'left', width: 45 } }
+    });
+
+    // Performance Summary
+    const finalY = doc.lastAutoTable.finalY + 8;
+    doc.setDrawColor(220).line(14, finalY, 196, finalY);
+    
+    doc.setFontSize(10).setFont(undefined, 'bold').setTextColor(0);
+    doc.text(`TOTAL SCORE: ${totalScore}`, 14, finalY + 8);
+    doc.text(`AVERAGE: ${myAvg}`, 70, finalY + 8);
+    
+    // Automatic Comment Box
+    doc.setFillColor(248, 250, 252);
+    doc.rect(14, finalY + 12, 182, 16, 'F');
+    doc.setFontSize(8).setFont(undefined, 'bold').text("HEADTEACHER'S REMARK:", 18, finalY + 18);
+    doc.setFont(undefined, 'italic').setFontSize(8).setTextColor(40);
+    doc.text(getDynamicComment(myAvg), 18, finalY + 23);
+
+    // Disclaimer
+    doc.setFontSize(7).setFont(undefined, 'italic').setTextColor(120);
+    doc.text("NOTE: This report card is property of Awere SS. Alteration is illegal. Average is based on registered subjects. It is invalid without official stamp and signature", 14, finalY + 36);
+
+    // Signatures & Stamp
+    const footY = finalY + 55;
+    if(config.signature) doc.addImage(config.signature, 'PNG', 14, footY - 12, 35, 12);
+    if(config.stamp) doc.addImage(config.stamp, 'PNG', 155, footY - 15, 25, 25);
+    doc.setFontSize(8).setFont(undefined, 'bold').setTextColor(0);
+    doc.text("__________________________", 14, footY + 5);
+    doc.text("MR. MWAKA KENNETH OKOT (HEADTEACHER)", 14, footY + 10);
+    doc.text("__________________________", 150, footY + 5);
+    doc.text("OFFICIAL STAMP", 150, footY + 10);
+
+    doc.save(`AwereSS_Report_${id.toUpperCase()}.pdf`);}
+        // --- CORE FUNCTIONALITIES (MAINTAINED) ---
+
+        function uiEnrollment() {
+            document.getElementById('portal-title').innerText = "Registration";
+            document.getElementById('breadcrumb').innerText = "Admin / User Enrollment";
+            let subCheckboxes = SUBJECTS.map(s => `<label class="flex items-center gap-2 text-[10px] font-bold"><input type="checkbox" name="reg-subs" value="${s}"> ${s}</label>`).join('');
+            document.getElementById('portal-content').innerHTML = `
+                <div class="glass max-w-2xl mx-auto">
+                    <h3 class="font-black mb-6 uppercase text-sm border-b pb-4">New User Enrollment</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div><label class="text-[9px] font-bold text-slate-400 uppercase ml-2">ACCESS ID/LIN</label><input id="reg-id"></div>
+                        <div><label class="text-[9px] font-bold text-slate-400 uppercase ml-2">FULL NAME</label><input id="reg-name"></div>
+                        <div><label class="text-[9px] font-bold text-slate-400 uppercase ml-2">ROLE</label><select id="reg-role" onchange="toggleRegMode()">
+                            <option value="learner">Learner</option><option value="teacher">Teacher</option>
+                            <option value="dos">DOS</option><option value="headteacher">Headteacher</option>
+                            <option value="bursar">Bursar</option>
+                        </select></div>
+                        <div><label class="text-[9px] font-bold text-slate-400 uppercase ml-2">DEFAULT PIN</label><input id="reg-pw" readonly></div>
+                    </div>
+                    <div id="learner-extras" class="mt-4 pt-6 border-t">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><label class="text-[9px] font-bold text-slate-400 uppercase ml-2">CLASS</label><select id="reg-class">${CLASSES.map(c => `<option>${c}</option>`).join('')}</select></div>
+                            <div><label class="text-[9px] font-bold text-slate-400 uppercase ml-2">GENDER</label><select id="reg-gen"><option>Male</option><option>Female</option></select></div>
+                        </div>
+                        <label class="text-[9px] font-bold text-slate-400 uppercase ml-2">SUBJECTS ENROLLED</label>
+                        <div class="subject-grid bg-slate-50 p-4 rounded-2xl mb-4 border border-slate-100">${subCheckboxes}</div>
+                    </div>
+                    <button onclick="processReg()" class="btn-primary w-full shadow-indigo-100">Synchronize to Registry</button>
+                </div>`;
+            toggleRegMode();
+        }
+
+        function toggleRegMode() {
+            const r = document.getElementById('reg-role').value;
+            document.getElementById('learner-extras').style.display = (r === 'learner') ? 'block' : 'none';
+            document.getElementById('reg-pw').value = (r === 'learner') ? '1234' : '0000';
+        }
+
+        async function processReg() {
+            const id = document.getElementById('reg-id').value.trim().toLowerCase();
+            const role = document.getElementById('reg-role').value;
+            const name = document.getElementById('reg-name').value;
+            if(!id || !name) return alert("Please fill ID and Name.");
+            
+            const data = {
+                name: name,
+                password: document.getElementById('reg-pw').value,
+                role: role,
+                balance: 0, totalFees: 0, assignments: []
+            };
+            if(role === 'learner') {
+                data.class = document.getElementById('reg-class').value;
+                data.gender = document.getElementById('reg-gen').value;
+                data.enrolledSubjects = Array.from(document.querySelectorAll('input[name="reg-subs"]:checked')).map(c => c.value);
+            }
+            await db.collection("users").doc(id).set(data);
+            alert("Registry Synchronized."); uiEnrollment();
+        }
+
+        async function uiRegistry() {
+            document.getElementById('portal-title').innerText = "Registry";
+            document.getElementById('breadcrumb').innerText = "Admin / Database Registry";
+            const snap = await db.collection("users").get();
+            let h = `<div class="glass overflow-x-auto"><table class="w-full text-left text-xs">
+                <thead><tr class="bg-slate-50 text-slate-400 uppercase font-black"><th class="p-5">ID/LIN</th><th>Name</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead><tbody>`;
+            snap.forEach(doc => {
+                const d = doc.data();
+                if(doc.id === 'admin') return; // Hide admin from easy deletion
+                h += `<tr class="border-b hover:bg-slate-50 transition-all">
+                    <td class="p-5 font-bold uppercase text-indigo-600">${doc.id}</td>
+                    <td class="font-bold text-slate-700">${d.name}</td>
+                    <td><span class="tag bg-slate-200 text-slate-600">${d.role}</span></td>
+                    <td>${d.class || '-'}</td>
+                    <td class="flex gap-4 p-4">
+                        <button onclick="editRegistry('${doc.id}')" class="text-indigo-600 font-bold hover:underline">Manage</button>
+                        <button onclick="deleteU('${doc.id}')" class="text-red-500 font-bold hover:underline">Remove</button>
+                    </td></tr>`;
+            });
+            document.getElementById('portal-content').innerHTML = h + `</tbody></table></div>`;
+        }
+
+        async function editRegistry(id) {
+            const doc = await db.collection("users").doc(id).get();
+            const d = doc.data();
+            let h = `<div class="glass max-w-lg mx-auto"><h3 class="font-black mb-4 uppercase text-indigo-900">Manage Record: ${id}</h3>
+                <label class="text-[9px] font-bold text-slate-400 ml-2">NAME</label><input id="e-name" value="${d.name}">
+                <label class="text-[9px] font-bold text-slate-400 ml-2">PIN</label><input id="e-pw" value="${d.password}">`;
+            
+            if(d.role !== 'learner') {
+                h += `<div class="border-t pt-4 mt-2"><p class="text-[9px] font-bold uppercase text-indigo-500 mb-4">Subject Assignments</p>
+                    <div class="flex gap-2 mb-4"><select id="ass-cls" class="mb-0">${CLASSES.map(c => `<option>${c}</option>`).join('')}</select>
+                    <select id="ass-sub" class="mb-0">${SUBJECTS.map(s => `<option>${s}</option>`).join('')}</select>
+                    <button onclick="addAss('${id}')" class="bg-indigo-600 text-white px-5 rounded-xl text-xs font-bold">Add</button></div>
+                    <div class="flex flex-wrap">${(d.assignments || []).map((a, i) => `<span class="tag">${a.class}: ${a.subject} <b class="cursor-pointer ml-1 text-red-400" onclick="remAss('${id}', ${i})">×</b></span>`).join('')}</div></div>`;
+            }
+            h += `<button onclick="saveEdit('${id}')" class="btn-primary w-full mt-6">Apply Changes</button></div>`;
+            document.getElementById('portal-content').innerHTML = h;
+        }
+
+        async function addAss(id) {
+            const cls = document.getElementById('ass-cls').value;
+            const sub = document.getElementById('ass-sub').value;
+            const ref = db.collection("users").doc(id);
+            const d = (await ref.get()).data();
+            const ass = d.assignments || [];
+            ass.push({class: cls, subject: sub});
+            await ref.update({ assignments: ass });
+            editRegistry(id);
+        }
+
+        async function remAss(id, i) {
+            const ref = db.collection("users").doc(id);
+            const d = (await ref.get()).data();
+            d.assignments.splice(i, 1);
+            await ref.update({ assignments: d.assignments });
+            editRegistry(id);
+        }
+
+        async function saveEdit(id) {
+            await db.collection("users").doc(id).update({ name: document.getElementById('e-name').value, password: document.getElementById('e-pw').value });
+            alert("Registry Record Updated."); uiRegistry();
+        }
+
+        async function uiMarks() {
+            document.getElementById('portal-title').innerText = "Academic Entry";
+            document.getElementById('breadcrumb').innerText = "Academic / Grade Input";
+            const myAss = (me.role === 'dev') ? CLASSES.map(c => ({class:c, subject:'Mathematics'})) : (me.assignments || []);
+            if(myAss.length === 0) { document.getElementById('portal-content').innerHTML = `<div class="glass text-center font-bold text-slate-400">No teaching assignments linked to your profile.</div>`; return; }
+            document.getElementById('portal-content').innerHTML = `
+                <div class="glass flex flex-col md:flex-row gap-4 items-end">
+                    <div class="flex-1"><label class="text-[9px] font-bold text-slate-400 ml-2">SELECT CLASS & SUBJECT</label>
+                    <select id="m-select" class="mb-0">${myAss.map(a => `<option value="${a.class}|${a.subject}">${a.class} - ${a.subject}</option>`).join('')}</select></div>
+                    <button onclick="loadMarks()" class="btn-primary whitespace-nowrap">Open Grade Sheet</button>
+                </div><div id="marks-sheet" class="glass hidden animate-in slide-in-from-top-4"></div>`;
+        }
+
+        async function loadMarks() {
+            const [cls, sub] = document.getElementById('m-select').value.split('|');
+            const snap = await db.collection("users").where("class", "==", cls).where("enrolledSubjects", "array-contains", sub).get();
+            const maxVal = config.mode === 'Summative' ? 100 : 3;
+            const minVal = config.mode === 'Summative' ? 0: 0.9;
+            
+            let h = `<h4 class="font-black mb-6 uppercase text-sm text-indigo-900">Grading: ${cls} - ${sub} (${config.mode})</h4>
+                <table class="w-full text-sm text-left">
+                <thead><tr class="bg-slate-50 text-slate-400 uppercase font-black"><th class="p-4">Learner Name</th><th>Score (Max: ${maxVal})</th><th>Competency Remark</th></tr></thead><tbody>`;
+            
+            snap.forEach(doc => {
+                h += `<tr class="border-b">
+                    <td class="p-4 font-bold text-slate-700">${doc.data().name}</td>
+                    <td><input type="number"
+       class="m-val mb-0"
+       data-id="${doc.id}"
+       style="max-width:120px"
+       min="${minVal}"
+       max="${maxVal}"
+       step="${config.mode === 'AoI' ? 0.1 : 1}"></td>
+                    <td><input type="text" class="m-com mb-0" data-id="${doc.id}" placeholder="e.g., Can solve quadratic equations"></td></tr>`;
+            });
+            h += `</tbody></table><button onclick="saveMarks('${cls}','${sub}')" class="btn-primary w-full mt-6">Post to Academic Ledger</button>`;
+            document.getElementById('marks-sheet').innerHTML = h; document.getElementById('marks-sheet').classList.remove('hidden');
+        }
+
+        async function saveMarks(cls, sub) {
+    const batch = db.batch();
+
+    document.querySelectorAll('.m-val').forEach(input => {
+
+        const s = parseFloat(input.value);   // ✅ DEFINE SCORE FIRST
+        const sid = input.dataset.id;
+        const com = document.querySelector(`.m-com[data-id="${sid}"]`).value;
+
+        if (isNaN(s)) return;
+
+        // validation of scores
+        if (config.mode === 'AoI' && (s < 0.9 || s > 3.0)) {
+            alert("AoI score must be between 0.9 and 3.0");
+            return;
+        }
+        if (config.mode === 'Summative' && (s < 0 || s > 100)) {
+            alert("Summative score must be between 0 and 100");
+            return;
+        }
+
+        const ref = db.collection("marks").doc(
+            `${sid}_${config.year}_${config.term}_${sub.replace(/\s/g, '')}`
+        );
+
+        batch.set(ref, {
+            studentId: sid,
+            subject: sub,
+            score: s,
+            comment: com,
+            year: config.year,
+            term: config.term,
+            teacher: me.name,
+            class: cls
+        });
+    });
+
+    await batch.commit();
+    alert("Marks Published Successfully.");
+}
+
+        async function uiBursar() {
+            document.getElementById('portal-title').innerText = "Bursar Desk";
+            document.getElementById('breadcrumb').innerText = "Finance / Fees Management";
+            document.getElementById('portal-content').innerHTML = `
+                <div class="glass max-w-md mx-auto">
+                    <label class="text-[9px] font-bold text-slate-400 ml-2">STUDENT LIN</label><input id="b-lin">
+                    <label class="text-[9px] font-bold text-slate-400 ml-2">TRANSACTION TYPE</label><select id="b-act"><option value="pay">Receive Fees Payment</option><option value="set">Set Opening Term Fees</option></select>
+                    <label class="text-[9px] font-bold text-slate-400 ml-2">AMOUNT (UGX)</label><input id="b-amt" type="number" placeholder="0">
+                    <button onclick="procFin()" class="btn-primary w-full mt-4">Post Transaction</button>
+                </div>`;
+        }
+
+        async function procFin() {
+            const id = document.getElementById('b-lin').value.trim().toLowerCase();
+            const amt = parseFloat(document.getElementById('b-amt').value);
+            const act = document.getElementById('b-act').value;
+            if(!id || isNaN(amt)) return alert("Fill ID and Amount.");
+            
+            const ref = db.collection("users").doc(id);
+            const doc = await ref.get();
+            if(!doc.exists) return alert("Student LIN not recognized.");
+            
+            if(act === 'set') { await ref.update({ totalFees: amt, balance: amt }); }
+            else { await ref.update({ balance: doc.data().balance - amt }); }
+            alert("Financial Ledger Updated."); uiBursar();
+        }
+
+        function uiSettings() {
+            document.getElementById('portal-title').innerText = "ERP Settings";
+            document.getElementById('breadcrumb').innerText = "Admin / Global Configuration";
+            document.getElementById('portal-content').innerHTML = `
+                <div class="glass max-w-md mx-auto">
+                    <label class="text-[9px] font-bold text-slate-400 ml-2 uppercase">Assessment Logic</label>
+                    <select id="set-mode"><option ${config.mode==='Summative'?'selected':''}>Summative</option><option ${config.mode==='AoI'?'selected':''}>AoI</option></select>
+                    <label class="text-[9px] font-bold text-slate-400 ml-2 uppercase">Active Term</label><select id="set-term"><option>Term 1</option><option>Term 2</option><option>Term 3</option></select>
+                    <label class="text-[9px] font-bold text-slate-400 ml-2 uppercase">School Badge URL</label><input id="set-badge" value="${config.badge}">
+                    <label class="text-[9px] font-bold text-slate-400 ml-2 uppercase">HT Signature URL</label><input id="set-sig" value="${config.signature}">
+                    <label class="text-[9px] font-bold text-slate-400 ml-2 uppercase">Stamp URL</label><input id="set-stamp" value="${config.stamp}">
+                    <button onclick="saveGlobal()" class="btn-primary w-full mt-4">Update Global Configuration</button>
+                </div>`;
+        }
+
+        async function saveGlobal() {
+            const data = {
+                mode: document.getElementById('set-mode').value, term: document.getElementById('set-term').value, year: config.year,
+                badge: document.getElementById('set-badge').value, signature: document.getElementById('set-sig').value, stamp: document.getElementById('set-stamp').value
+            };
+            await db.collection("settings").doc("global").set(data);
+            alert("System configurations updated."); location.reload();
+        }
+
+        async function deleteU(id) { if(confirm("Permanently delete this user? This cannot be undone.")) { await db.collection("users").doc(id).delete(); uiRegistry(); } }
+    </script>
+</body>
+</html>
