@@ -100,7 +100,7 @@
         }
         init();
         function getGrade (score) {
-            if (config.mode === 'AoI') {
+            if (config.mode ==='AoI') {
                 if ( score>=2.5) return "A";
                 if ( score >=1.5) return "B";
                 return "C";
@@ -537,7 +537,7 @@ try {
     doc.text("__________________________", 150, footY + 5);
     doc.text("OFFICIAL STAMP", 150, footY + 10);
 
-    doc.save(`AwereSS_Report_${id.toUpperCase()}.pdf`);}
+    doc.save(`AwereSS_Report_${u.name.toUpperCase()}.pdf`);}
 
     async function genClassLedger(cls) {
     const { jsPDF } = window.jspdf;
